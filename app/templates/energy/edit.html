@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Energy Consumption Record - Smart Energy Management{% endblock %}
+{% block page_heading %}Edit Energy Record{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-xl-7">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-pencil-square me-2 text-success"></i> Edit Record #{{ record.id }}</h5>
+                    <span class="badge bg-light text-dark border">{{ record.date.strftime('%B %d, %Y') }}</span>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('energy.edit_record', record_id=record.id) }}" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.date.id }}"><i class="bi bi-calendar-event me-1 text-muted"></i> {{ form.date.label.text }}</label>
+                                {{ form.date(class="form-control" + (" is-invalid" if form.date.errors else "")) }}
+                                {% for error in form.date.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.electricity_consumption_kwh.id }}"><i class="bi bi-lightning-charge me-1 text-success"></i> {{ form.electricity_consumption_kwh.label.text }}</label>
+                                {{ form.electricity_consumption_kwh(class="form-control" + (" is-invalid" if form.electricity_consumption_kwh.errors else "")) }}
+                                {% for error in form.electricity_consumption_kwh.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.peak_consumption_kwh.id }}"><i class="bi bi-sun me-1 text-warning"></i> {{ form.peak_consumption_kwh.label.text }}</label>
+                                {{ form.peak_consumption_kwh(class="form-control" + (" is-invalid" if form.peak_consumption_kwh.errors else "")) }}
+                                {% for error in form.peak_consumption_kwh.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.off_peak_consumption_kwh.id }}"><i class="bi bi-moon-stars me-1 text-muted"></i> {{ form.off_peak_consumption_kwh.label.text }}</label>
+                                {{ form.off_peak_consumption_kwh(class="form-control" + (" is-invalid" if form.off_peak_consumption_kwh.errors else "")) }}
+                                {% for error in form.off_peak_consumption_kwh.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.appliance_usage_hours.id }}"><i class="bi bi-clock me-1 text-muted"></i> {{ form.appliance_usage_hours.label.text }}</label>
+                                {{ form.appliance_usage_hours(class="form-control" + (" is-invalid" if form.appliance_usage_hours.errors else "")) }}
+                                {% for error in form.appliance_usage_hours.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label" for="{{ form.estimated_cost.id }}"><i class="bi bi-cash-stack me-1 text-success"></i> {{ form.estimated_cost.label.text }}</label>
+                                {{ form.estimated_cost(class="form-control" + (" is-invalid" if form.estimated_cost.errors else "")) }}
+                                {% for error in form.estimated_cost.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                {{ form.is_synthetic(class="form-check-input") }}
+                                <label class="form-check-label small text-muted" for="{{ form.is_synthetic.id }}">
+                                    Mark as Synthetic / Demo Data
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <a href="{{ url_for('energy.records') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i> Back to Records
+                            </a>
+                            {{ form.submit(class="btn btn-primary px-4 fw-semibold") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

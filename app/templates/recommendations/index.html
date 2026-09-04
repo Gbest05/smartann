@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Energy Saving Recommendations - Smart Energy Management{% endblock %}
+{% block page_heading %}Energy Saving Recommendations{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">Smart Energy Optimization Advisory</h4>
+            <p class="text-muted small mb-0">Actionable, AI-driven recommendations tailored to your household's electricity consumption profile.</p>
+        </div>
+    </div>
+
+    <!-- Active Tier Status Card -->
+    <div class="card shadow-sm border-0 mb-4 bg-light">
+        <div class="card-body p-4">
+            <div class="row align-items-center g-3">
+                <div class="col-md-7">
+                    <span class="badge bg-dark mb-2">Household Assessment</span>
+                    <h5 class="fw-bold text-dark mb-1">
+                        Current Profile: 
+                        <span class="badge {% if recs_data.level == 'Low' %}badge-low{% elif recs_data.level == 'Moderate' %}badge-moderate{% else %}badge-high{% endif %}">
+                            {{ recs_data.level }} Consumption Tier
+                        </span>
+                    </h5>
+                    <p class="text-muted small mb-0">
+                        Threshold Guidelines: <strong>Low: 0 &ndash; {{ recs_data.low_threshold }} kWh/day</strong> &bull; <strong>Moderate: {{ recs_data.low_threshold }} &ndash; {{ recs_data.moderate_threshold }} kWh/day</strong> &bull; <strong>High: &gt; {{ recs_data.moderate_threshold }} kWh/day</strong>.
+                    </p>
+                </div>
+                <div class="col-md-5 text-md-end">
+                    <a href="{{ url_for('energy.add_record') }}" class="btn btn-primary btn-sm px-3">
+                        <i class="bi bi-plus-circle me-1"></i> Update Recent Usage
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dynamic Tailored Recommendations -->
+    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-stars text-warning me-2"></i> Targeted Action Items for Your Household</h5>
+    <div class="row g-3 mb-4">
+        {% for rec in recs_data.recommendations %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 shadow-sm border-0 p-3">
+                <div class="d-flex align-items-center mb-2">
+                    <div class="p-2 rounded-3 me-2 text-success bg-light fs-4">
+                        <i class="bi {{ rec.icon }}"></i>
+                    </div>
+                    <h6 class="fw-bold text-dark mb-0">{{ rec.title }}</h6>
+                </div>
+                <p class="text-muted small mb-0">{{ rec.message }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Comprehensive Energy Efficiency Guide -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3 border-bottom">
+            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-book me-2 text-success"></i> Comprehensive Residential Energy Guidelines</h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="border rounded-3 p-3 h-100 bg-light">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge badge-high me-2">High Tier</span>
+                            <h6 class="fw-bold mb-0 text-danger">Load Shedding & Heavy Appliances</h6>
+                        </div>
+                        <ul class="small text-muted ps-3 mb-0">
+                            <li>Set air conditioning thermostats to 24°C-26°C.</li>
+                            <li>Turn off electric water heaters once warm.</li>
+                            <li>Avoid running heavy induction cookers or ovens simultaneously during evening peak hours (6 PM &ndash; 10 PM).</li>
+                            <li>Inspect refrigeration gaskets for cold air leaks.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="border rounded-3 p-3 h-100 bg-light">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge badge-moderate me-2">Moderate Tier</span>
+                            <h6 class="fw-bold mb-0 text-warning">Appliance & Standby Optimization</h6>
+                        </div>
+                        <ul class="small text-muted ps-3 mb-0">
+                            <li>Unplug entertainment systems, chargers, and microwaves to stop phantom draw.</li>
+                            <li>Run washing machines with full loads and cold water settings.</li>
+                            <li>Switch all incandescent or halogen bulbs to LED luminaires.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="col-md-4">
+                    <div class="border rounded-3 p-3 h-100 bg-light">
+                        <div class="d-flex align-items-center mb-2">
+                            <span class="badge badge-low me-2">Low Tier</span>
+                            <h6 class="fw-bold mb-0 text-success">Green Habit Sustainability</h6>
+                        </div>
+                        <ul class="small text-muted ps-3 mb-0">
+                            <li>Maximize natural cross-ventilation and daylighting during daylight hours.</li>
+                            <li>Keep tracking daily consumption in this portal to detect any unexpected surges early.</li>
+                            <li>Sustain optimal energy habits across all household members.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

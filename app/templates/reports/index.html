@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Consumption Reports & Analytics - Smart Energy Management{% endblock %}
+{% block page_heading %}Consumption Reports & Analytics{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Header & Export Action Bar -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">Electricity Consumption Reports</h4>
+            <p class="text-muted small mb-0">Aggregate daily, weekly, and monthly electricity analytics and cost summaries.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('reports.print_view', type=report_type, user_id=selected_user_id) }}" target="_blank" class="btn btn-outline-secondary btn-sm px-3">
+                <i class="bi bi-printer me-1"></i> Print / PDF View
+            </a>
+            <a href="{{ url_for('reports.export_csv', user_id=selected_user_id) }}" class="btn btn-outline-success btn-sm px-3">
+                <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export Full CSV
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Pills & Scope Selector -->
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-body p-3">
+            <form method="GET" action="{{ url_for('reports.index') }}" class="row g-2 align-items-center">
+                <div class="col-md-6 d-flex gap-2">
+                    <a href="{{ url_for('reports.index', type='monthly', user_id=selected_user_id) }}" class="btn btn-sm {% if report_type == 'monthly' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                        Monthly Report
+                    </a>
+                    <a href="{{ url_for('reports.index', type='weekly', user_id=selected_user_id) }}" class="btn btn-sm {% if report_type == 'weekly' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                        Weekly Report
+                    </a>
+                    <a href="{{ url_for('reports.index', type='daily', user_id=selected_user_id) }}" class="btn btn-sm {% if report_type == 'daily' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+                        Daily Report
+                    </a>
+                </div>
+                {% if current_user.is_admin and users %}
+                <div class="col-md-4 ms-auto">
+                    <div class="input-group input-group-sm">
+                        <label class="input-group-text bg-light">Household:</label>
+                        <select name="user_id" class="form-select form-select-sm" onchange="this.form.submit()">
+                            {% for u in users %}
+                            <option value="{{ u.id }}" {% if selected_user_id == u.id %}selected{% endif %}>{{ u.full_name }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="hidden" name="type" value="{{ report_type }}">
+                    </div>
+                </div>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary Metrics Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+            <div class="p-3 bg-white border rounded-3 text-center shadow-sm">
+                <div class="text-muted small fw-bold text-uppercase">Total Consumption</div>
+                <div class="fs-4 fw-bold text-success">{{ total_kwh }} <span class="fs-6 fw-normal text-muted">kWh</span></div>
+                <div class="text-muted" style="font-size: 0.75rem;">Selected Household Total</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="p-3 bg-white border rounded-3 text-center shadow-sm">
+                <div class="text-muted small fw-bold text-uppercase">Total Billed Cost</div>
+                <div class="fs-4 fw-bold text-dark">{{ total_cost | naira }}</div>
+                <div class="text-muted" style="font-size: 0.75rem;">₦{{ "%.2f"|format(tariff) }}/kWh Rate</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="p-3 bg-white border rounded-3 text-center shadow-sm">
+                <div class="text-muted small fw-bold text-uppercase">Average Daily Usage</div>
+                <div class="fs-4 fw-bold text-warning">{{ avg_kwh }} <span class="fs-6 fw-normal text-muted">kWh</span></div>
+                <div class="text-muted" style="font-size: 0.75rem;">Mean Daily Energy</div>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="p-3 bg-white border rounded-3 text-center shadow-sm">
+                <div class="text-muted small fw-bold text-uppercase">Peak Load Total</div>
+                <div class="fs-4 fw-bold text-danger">{{ peak_sum }} <span class="fs-6 fw-normal text-muted">kWh</span></div>
+                <div class="text-muted" style="font-size: 0.75rem;">Peak Hours Electricity</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aggregated Report Table -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0 text-dark">
+                <i class="bi bi-bar-chart-line me-2 text-success"></i> 
+                {{ report_type | capitalize }} Breakdown - {{ target_user.full_name }}
+            </h5>
+            <span class="badge bg-light text-dark border">{{ grouped_data | length }} Periods Analyzed</span>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Period</th>
+                            <th>Total Consumption (kWh)</th>
+                            <th>Peak Load (kWh)</th>
+                            <th>Off-Peak (kWh)</th>
+                            <th>Estimated Cost (₦)</th>
+                            <th>Consumption Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in grouped_data %}
+                        <tr>
+                            <td class="fw-semibold">{{ item.period }}</td>
+                            <td class="fw-bold text-dark">{{ "%.2f"|format(item.total_kwh) }} kWh</td>
+                            <td>{{ "%.2f"|format(item.peak_kwh) }} kWh</td>
+                            <td>{{ "%.2f"|format(item.off_peak_kwh) }} kWh</td>
+                            <td class="fw-semibold text-dark">{{ item.cost | naira }}</td>
+                            <td>
+                                <span class="badge {% if item.level == 'Low' %}badge-low{% elif item.level == 'Moderate' %}badge-moderate{% else %}badge-high{% endif %}">
+                                    {{ item.level }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No aggregated records available for this view.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

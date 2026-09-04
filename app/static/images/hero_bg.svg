@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" width="1920" height="1080">
+  <defs>
+    <radialGradient id="bgGlow" cx="70%" cy="30%" r="60%">
+      <stop offset="0%" stop-color="#16A34A" stop-opacity="0.35"/>
+      <stop offset="50%" stop-color="#0F172A" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#0B0F19" stop-opacity="1"/>
+    </radialGradient>
+    <linearGradient id="gridLine" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22C55E" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#15803D" stop-opacity="0.02"/>
+    </linearGradient>
+    <linearGradient id="nodePulse" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#22C55E" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#10B981" stop-opacity="0.2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Deep Dark Base -->
+  <rect width="1920" height="1080" fill="#090D16"/>
+  <rect width="1920" height="1080" fill="url(#bgGlow)"/>
+
+  <!-- Perspective High-Tech Grid -->
+  <g stroke="url(#gridLine)" stroke-width="1.5">
+    <!-- Horizontal isometric grid lines -->
+    <line x1="0" y1="200" x2="1920" y2="200"/>
+    <line x1="0" y1="360" x2="1920" y2="360"/>
+    <line x1="0" y1="520" x2="1920" y2="520"/>
+    <line x1="0" y1="680" x2="1920" y2="680"/>
+    <line x1="0" y1="840" x2="1920" y2="840"/>
+    <line x1="0" y1="1000" x2="1920" y2="1000"/>
+
+    <!-- Vertical grid lines -->
+    <line x1="160" y1="0" x2="160" y2="1080"/>
+    <line x1="360" y1="0" x2="360" y2="1080"/>
+    <line x1="560" y1="0" x2="560" y2="1080"/>
+    <line x1="760" y1="0" x2="760" y2="1080"/>
+    <line x1="960" y1="0" x2="960" y2="1080"/>
+    <line x1="1160" y1="0" x2="1160" y2="1080"/>
+    <line x1="1360" y1="0" x2="1360" y2="1080"/>
+    <line x1="1560" y1="0" x2="1560" y2="1080"/>
+    <line x1="1760" y1="0" x2="1760" y2="1080"/>
+  </g>
+
+  <!-- Neural Network Energy Flow Waves -->
+  <path d="M 0,650 Q 480,450 960,620 T 1920,500" fill="none" stroke="#16A34A" stroke-width="3" stroke-opacity="0.3"/>
+  <path d="M 0,720 Q 520,520 1060,680 T 1920,560" fill="none" stroke="#22C55E" stroke-width="2" stroke-opacity="0.25"/>
+  <path d="M 0,580 Q 420,380 880,540 T 1920,420" fill="none" stroke="#10B981" stroke-width="1.5" stroke-opacity="0.2"/>
+
+  <!-- Energy Network Interconnection Nodes -->
+  <g fill="#22C55E">
+    <circle cx="480" cy="450" r="6" opacity="0.6"/>
+    <circle cx="960" cy="620" r="8" opacity="0.8"/>
+    <circle cx="1440" cy="530" r="6" opacity="0.7"/>
+    <circle cx="360" cy="360" r="4" opacity="0.5"/>
+    <circle cx="1160" cy="360" r="5" opacity="0.6"/>
+    <circle cx="1560" cy="680" r="7" opacity="0.7"/>
+    <circle cx="760" cy="680" r="5" opacity="0.5"/>
+  </g>
+
+  <!-- Glowing Connection Pulses -->
+  <line x1="480" y1="450" x2="960" y2="620" stroke="url(#nodePulse)" stroke-width="2"/>
+  <line x1="960" y1="620" x2="1440" y2="530" stroke="url(#nodePulse)" stroke-width="2"/>
+  <line x1="1160" y1="360" x2="1440" y2="530" stroke="url(#nodePulse)" stroke-width="1.5"/>
+  <line x1="360" y1="360" x2="480" y2="450" stroke="url(#nodePulse)" stroke-width="1.5"/>
+</svg>

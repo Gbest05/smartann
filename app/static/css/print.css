@@ -1,0 +1,55 @@
+/* Print Stylesheet for Smart Energy Management System */
+@media print {
+    body {
+        background-color: #FFFFFF !important;
+        color: #000000 !important;
+        font-size: 11pt;
+    }
+
+    .app-sidebar,
+    .app-topbar,
+    .sidebar-overlay,
+    .btn,
+    .no-print,
+    .alert,
+    form {
+        display: none !important;
+    }
+
+    .app-wrapper, .app-main, .page-body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+
+    .card {
+        border: 1px solid #CCCCCC !important;
+        box-shadow: none !important;
+        margin-bottom: 1.5rem !important;
+        page-break-inside: avoid;
+    }
+
+    .table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+    }
+
+    .table th, .table td {
+        border: 1px solid #DDDDDD !important;
+        padding: 6px 8px !important;
+        font-size: 10pt !important;
+    }
+
+    .print-header {
+        display: block !important;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid #16A34A;
+        padding-bottom: 1rem;
+    }
+
+    .print-title {
+        font-size: 18pt;
+        font-weight: bold;
+        color: #16A34A;
+    }
+}

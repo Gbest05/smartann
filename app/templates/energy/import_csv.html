@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Import Energy Data (CSV) - Smart Energy Management{% endblock %}
+{% block page_heading %}Import Historical Energy Data{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="row justify-content-center">
+        <div class="col-lg-9 col-xl-8">
+            <!-- Results Alert if Import was Run -->
+            {% if success_count is defined %}
+            <div class="card mb-4 border-0 shadow-sm {% if success_count > 0 %}bg-light{% else %}bg-light{% endif %}">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3 {% if success_count > 0 %}text-success{% else %}text-danger{% endif %}">
+                        <i class="bi {% if success_count > 0 %}bi-check-circle-fill{% else %}bi-exclamation-octagon-fill{% endif %} me-2"></i>
+                        Import Summary Results
+                    </h5>
+                    <div class="row g-3 text-center mb-3">
+                        <div class="col-6">
+                            <div class="p-3 bg-white border rounded-3">
+                                <div class="text-muted small fw-bold text-uppercase">Successful Records</div>
+                                <div class="fs-3 fw-bold text-success">{{ success_count }}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-white border rounded-3">
+                                <div class="text-muted small fw-bold text-uppercase">Failed Rows</div>
+                                <div class="fs-3 fw-bold {% if failed_rows %}text-danger{% else %}text-muted{% endif %}">{{ failed_rows | length }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if failed_rows %}
+                    <div class="alert alert-danger mb-0">
+                        <div class="fw-bold mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i> Row Errors Encountered:</div>
+                        <ul class="mb-0 ps-3 small">
+                            {% for err in failed_rows[:15] %}
+                            <li>{{ err }}</li>
+                            {% endfor %}
+                            {% if failed_rows | length > 15 %}
+                            <li>... and {{ failed_rows | length - 15 }} more row issues.</li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- CSV Upload Form Card -->
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-file-earmark-arrow-up me-2 text-success"></i> Batch CSV Upload</h5>
+                    <a href="{{ url_for('energy.sample_csv') }}" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-download me-1"></i> Download Sample CSV
+                    </a>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('energy.import_csv') }}" enctype="multipart/form-data" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ form.user_id.id }}"><i class="bi bi-person-check me-1 text-muted"></i> {{ form.user_id.label.text }}</label>
+                            {{ form.user_id(class="form-select" + (" is-invalid" if form.user_id.errors else "")) }}
+                            <div class="form-text small text-muted">Select the residential household account that owns these records.</div>
+                            {% for error in form.user_id.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ form.csv_file.id }}"><i class="bi bi-filetype-csv me-1 text-success"></i> {{ form.csv_file.label.text }}</label>
+                            {{ form.csv_file(class="form-control" + (" is-invalid" if form.csv_file.errors else "")) }}
+                            {% for error in form.csv_file.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-4">
+                            <div class="form-check">
+                                {{ form.is_synthetic(class="form-check-input") }}
+                                <label class="form-check-label small text-muted" for="{{ form.is_synthetic.id }}">
+                                    Label all imported records as Synthetic / Demo Data
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                            <a href="{{ url_for('energy.records') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i> Back
+                            </a>
+                            {{ form.submit(class="btn btn-primary px-4 fw-semibold") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- CSV Formatting Guidelines Card -->
+            <div class="card border-0 bg-light shadow-sm">
+                <div class="card-body p-4">
+                    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-info-circle text-success me-2"></i> Expected CSV Format</h6>
+                    <p class="small text-muted mb-2">Your CSV file must include header column names matching the following specification:</p>
+                    <div class="bg-dark text-white p-3 rounded-3 small mb-3 overflow-x-auto font-monospace">
+date,electricity_consumption_kwh,peak_consumption_kwh,off_peak_consumption_kwh,appliance_usage_hours,estimated_cost<br>
+2026-08-01,8.45,4.80,3.65,8.5,1014.00<br>
+2026-08-02,9.10,5.20,3.90,9.0,1092.00
+                    </div>
+                    <ul class="small text-muted mb-0 ps-3">
+                        <li><strong>date:</strong> ISO format (YYYY-MM-DD) or DD/MM/YYYY.</li>
+                        <li><strong>electricity_consumption_kwh:</strong> Required, positive decimal number.</li>
+                        <li><strong>estimated_cost:</strong> Optional; auto-calculated with active tariff (₦) if omitted.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

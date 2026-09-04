@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}System Settings - Smart Energy Management{% endblock %}
+{% block page_heading %}System Settings & Recommendation Rules{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="row g-4">
+        <!-- Left: System Tariff & Threshold Settings Form -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-sliders me-2 text-success"></i> Energy Tariff & Classification Thresholds</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('admin.settings') }}" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ form.tariff_per_kwh.id }}">
+                                <i class="bi bi-cash-coin me-1 text-success"></i> {{ form.tariff_per_kwh.label.text }}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">₦</span>
+                                {{ form.tariff_per_kwh(class="form-control" + (" is-invalid" if form.tariff_per_kwh.errors else ""), placeholder="120.00") }}
+                                <span class="input-group-text bg-light">/ kWh</span>
+                            </div>
+                            <div class="form-text small text-muted">Applied to all energy cost estimations across dashboard and predictions.</div>
+                            {% for error in form.tariff_per_kwh.errors %}
+                            <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-sm-6">
+                                <label class="form-label" for="{{ form.low_consumption_threshold.id }}">
+                                    <i class="bi bi-tag text-success me-1"></i> {{ form.low_consumption_threshold.label.text }}
+                                </label>
+                                {{ form.low_consumption_threshold(class="form-control" + (" is-invalid" if form.low_consumption_threshold.errors else ""), placeholder="5.0") }}
+                                <div class="form-text small text-muted">0 to threshold = Low (Green).</div>
+                                {% for error in form.low_consumption_threshold.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-sm-6">
+                                <label class="form-label" for="{{ form.moderate_consumption_threshold.id }}">
+                                    <i class="bi bi-tag text-warning me-1"></i> {{ form.moderate_consumption_threshold.label.text }}
+                                </label>
+                                {{ form.moderate_consumption_threshold(class="form-control" + (" is-invalid" if form.moderate_consumption_threshold.errors else ""), placeholder="10.0") }}
+                                <div class="form-text small text-muted">Low to threshold = Moderate (Amber). Above = High (Red).</div>
+                                {% for error in form.moderate_consumption_threshold.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-primary py-2 fw-semibold") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Add Custom Recommendation Rule -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 mb-4">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-lightbulb me-2 text-warning"></i> Add Custom Recommendation</h5>
+                </div>
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('admin.add_recommendation') }}" novalidate>
+                        {{ rec_form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ rec_form.title.id }}">{{ rec_form.title.label.text }}</label>
+                            {{ rec_form.title(class="form-control", placeholder="e.g. Inverter Air Conditioner Advisory") }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ rec_form.consumption_level.id }}">{{ rec_form.consumption_level.label.text }}</label>
+                            {{ rec_form.consumption_level(class="form-select") }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ rec_form.message.id }}">{{ rec_form.message.label.text }}</label>
+                            {{ rec_form.message(class="form-control", rows=3, placeholder="Provide detailed advice for residents...") }}
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ rec_form.is_active(class="form-check-input") }}
+                                <label class="form-check-label small" for="{{ rec_form.is_active.id }}">
+                                    Active (Display immediately on resident dashboards)
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            {{ rec_form.submit(class="btn btn-accent py-2 fw-semibold") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Custom Recommendations Table -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-list-check me-2 text-success"></i> Custom Advisory Rules in Database</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Target Tier</th>
+                            <th>Advisory Message</th>
+                            <th>Created At</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for rec in recommendations %}
+                        <tr>
+                            <td class="fw-bold">{{ rec.title }}</td>
+                            <td>
+                                <span class="badge {% if rec.consumption_level == 'low' %}badge-low{% elif rec.consumption_level == 'moderate' %}badge-moderate{% elif rec.consumption_level == 'high' %}badge-high{% else %}bg-secondary{% endif %}">
+                                    {{ rec.consumption_level | upper }}
+                                </span>
+                            </td>
+                            <td class="small text-muted">{{ rec.message }}</td>
+                            <td class="small text-muted">{{ rec.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td class="text-end">
+                                <form method="POST" action="{{ url_for('admin.delete_recommendation', rec_id=rec.id) }}" class="d-inline" onsubmit="return confirm('Delete this recommendation?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4 text-muted">No custom recommendation rules added yet. Default dynamic rules are currently active.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

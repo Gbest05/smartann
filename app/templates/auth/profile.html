@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Account Settings & Profile - Smart Energy Management{% endblock %}
+{% block page_heading %}Account Settings & Profile{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="row g-4">
+        <!-- Left Column: User Summary & Avatar Preview -->
+        <div class="col-lg-4">
+            <div class="card text-center p-4 shadow-sm border-0 mb-4">
+                <div class="position-relative d-inline-block mx-auto mb-3">
+                    {% if current_user.avatar %}
+                    <img src="{{ current_user.avatar_url }}" alt="{{ current_user.full_name }}" class="rounded-circle shadow border border-2 border-success object-fit-cover" style="width: 100px; height: 100px;">
+                    {% else %}
+                    <div class="user-avatar mx-auto shadow border border-2 border-success d-flex align-items-center justify-content-center text-white fw-bold" style="width: 100px; height: 100px; font-size: 2.5rem; background: linear-gradient(135deg, #16A34A, #15803D); border-radius: 50%;">
+                        {{ current_user.full_name[:1] | upper }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <h5 class="fw-bold mb-1 text-dark">{{ current_user.full_name }}</h5>
+                <p class="text-muted small mb-2">{{ current_user.email }}</p>
+                <div>
+                    <span class="badge {% if current_user.is_admin %}bg-amber text-dark fw-bold{% else %}bg-success{% endif %} text-uppercase px-3 py-2">
+                        <i class="bi bi-shield-check me-1"></i> {{ current_user.role }}
+                    </span>
+                </div>
+                <hr class="my-3">
+                <div class="text-start small text-muted">
+                    <div class="mb-2 d-flex justify-content-between">
+                        <span><i class="bi bi-calendar-check me-2 text-success"></i> Registered:</span>
+                        <strong class="text-dark">{{ current_user.created_at.strftime('%b %d, %Y') }}</strong>
+                    </div>
+                    <div class="mb-2 d-flex justify-content-between">
+                        <span><i class="bi bi-journal-text me-2 text-success"></i> Energy Logs:</span>
+                        <strong class="text-dark">{{ total_records }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span><i class="bi bi-cpu me-2 text-amber"></i> AI Predictions:</span>
+                        <strong class="text-dark">{{ total_predictions }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Edit Profile & Reset Password Tabs/Forms -->
+        <div class="col-lg-8">
+            <!-- Edit Profile & Avatar Form -->
+            <div class="card shadow-sm border-0 p-4 mb-4">
+                <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-person-bounding-box text-success"></i> Edit Profile & Upload Avatar
+                </h5>
+                <form method="POST" action="{{ url_for('auth.profile') }}" enctype="multipart/form-data" novalidate>
+                    {{ profile_form.hidden_tag() }}
+                    <input type="hidden" name="action" value="update_profile">
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold" for="{{ profile_form.full_name.id }}">Full Name</label>
+                            {{ profile_form.full_name(class="form-control" + (" is-invalid" if profile_form.full_name.errors else ""), value=current_user.full_name) }}
+                            {% for error in profile_form.full_name.errors %}
+                            <div class="invalid-feedback small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Email Address (Read-only)</label>
+                            <input type="email" class="form-control bg-light text-muted" value="{{ current_user.email }}" readonly>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold" for="{{ profile_form.avatar.id }}">
+                                <i class="bi bi-image me-1 text-muted"></i> Upload Profile Image / Avatar
+                            </label>
+                            {{ profile_form.avatar(class="form-control" + (" is-invalid" if profile_form.avatar.errors else "")) }}
+                            <div class="form-text small">Accepted formats: JPG, PNG, WEBP, SVG (Max 5MB).</div>
+                            {% for error in profile_form.avatar.errors %}
+                            <div class="invalid-feedback small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold">
+                            <i class="bi bi-check2-circle me-1"></i> Save Profile Details
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Reset / Change Password Form -->
+            <div class="card shadow-sm border-0 p-4">
+                <h5 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                    <i class="bi bi-key-fill text-amber"></i> Reset / Change Password
+                </h5>
+                <form method="POST" action="{{ url_for('auth.profile') }}" novalidate>
+                    {{ password_form.hidden_tag() }}
+                    <input type="hidden" name="action" value="change_password">
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="{{ password_form.current_password.id }}">Current Password</label>
+                        <div class="input-group">
+                            {{ password_form.current_password(class="form-control" + (" is-invalid" if password_form.current_password.errors else ""), placeholder="Enter your current password", id="currPassInput") }}
+                            <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('currPassInput', 'currPassIcon')" title="Show/Hide password">
+                                <i class="bi bi-eye" id="currPassIcon"></i>
+                            </button>
+                        </div>
+                        {% for error in password_form.current_password.errors %}
+                        <div class="text-danger small mt-1">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold" for="{{ password_form.new_password.id }}">New Password</label>
+                            <div class="input-group">
+                                {{ password_form.new_password(class="form-control" + (" is-invalid" if password_form.new_password.errors else ""), placeholder="New password (min 6 chars)", id="newPassInput") }}
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('newPassInput', 'newPassIcon')" title="Show/Hide password">
+                                    <i class="bi bi-eye" id="newPassIcon"></i>
+                                </button>
+                            </div>
+                            {% for error in password_form.new_password.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold" for="{{ password_form.confirm_password.id }}">Confirm New Password</label>
+                            <div class="input-group">
+                                {{ password_form.confirm_password(class="form-control" + (" is-invalid" if password_form.confirm_password.errors else ""), placeholder="Confirm new password", id="confPassInput") }}
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('confPassInput', 'confPassIcon')" title="Show/Hide password">
+                                    <i class="bi bi-eye" id="confPassIcon"></i>
+                                </button>
+                            </div>
+                            {% for error in password_form.confirm_password.errors %}
+                            <div class="text-danger small mt-1">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-accent px-4 py-2 fw-semibold">
+                            <i class="bi bi-shield-lock me-1"></i> Update Password
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePasswordVisibility(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+    }
+}
+</script>
+{% endblock %}

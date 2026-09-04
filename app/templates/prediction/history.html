@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+
+{% block title %}Prediction History - Smart Energy Management{% endblock %}
+{% block page_heading %}ANN Energy Prediction Logs{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">ANN Prediction History</h4>
+            <p class="text-muted small mb-0">Chronological audit of all Artificial Neural Network energy forecasts.</p>
+        </div>
+        <div>
+            <a href="{{ url_for('prediction.index') }}" class="btn btn-primary btn-sm px-3">
+                <i class="bi bi-plus-circle me-1"></i> New Prediction
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>#ID</th>
+                            {% if current_user.is_admin %}
+                            <th>Household</th>
+                            {% endif %}
+                            <th>Target Date</th>
+                            <th>Predicted (kWh)</th>
+                            <th>Estimated Cost (₦)</th>
+                            <th>Appliance Hours</th>
+                            <th>Consumption Tier</th>
+                            <th>Generated At</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pred in predictions %}
+                        <tr>
+                            <td class="text-muted small">#{{ pred.id }}</td>
+                            {% if current_user.is_admin %}
+                            <td class="fw-semibold small">{{ pred.user.full_name if pred.user else 'Unknown' }}</td>
+                            {% endif %}
+                            <td class="fw-semibold">{{ pred.prediction_date.strftime('%B %d, %Y') }}</td>
+                            <td class="fw-bold text-dark">{{ "%.2f"|format(pred.predicted_consumption_kwh) }} kWh</td>
+                            <td class="fw-semibold text-dark">{{ pred.estimated_cost | naira }}</td>
+                            <td>{{ "%.1f"|format(pred.appliance_usage_hours) if pred.appliance_usage_hours else '—' }} hrs</td>
+                            <td>
+                                <span class="badge {% if pred.consumption_level == 'Low' %}badge-low{% elif pred.consumption_level == 'Moderate' %}badge-moderate{% else %}badge-high{% endif %}">
+                                    {{ pred.consumption_level }}
+                                </span>
+                            </td>
+                            <td class="small text-muted">{{ pred.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td class="text-end">
+                                <form method="POST" action="{{ url_for('prediction.delete_prediction', pred_id=pred.id) }}" class="d-inline" onsubmit="return confirm('Delete this prediction entry?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger py-1 px-2" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="{% if current_user.is_admin %}9{% else %}8{% endif %}" class="text-center py-5 text-muted">
+                                <i class="bi bi-clock-history fs-1 d-block mb-2 text-muted"></i>
+                                No prediction logs recorded yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if pagination.pages > 1 %}
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <span class="small text-muted">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('prediction.history', page=pagination.prev_num) }}">Previous</a>
+                </li>
+                {% for p in pagination.iter_pages() %}
+                    {% if p %}
+                        <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('prediction.history', page=p) }}">{{ p }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('prediction.history', page=pagination.next_num) }}">Next</a>
+                </li>
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

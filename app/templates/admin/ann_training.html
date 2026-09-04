@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}ANN Model Training - Smart Energy Management{% endblock %}
+{% block page_heading %}Artificial Neural Network Training Center{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">ANN Model Training & Performance</h4>
+            <p class="text-muted small mb-0">Train, evaluate, and deploy Scikit-learn MLPRegressor neural networks on historical energy records.</p>
+        </div>
+        <div>
+            <form method="POST" action="{{ url_for('admin.ann_training') }}" class="d-inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-primary px-4 py-2 shadow-sm fw-semibold" {% if total_records < 15 %}title="At least 15 energy records are required to train"{% endif %}>
+                    <i class="bi bi-play-circle-fill me-2"></i> Train ANN Model
+                </button>
+            </form>
+        </div>
+    </div>
+
+    {% if total_records < 15 %}
+    <div class="alert alert-warning d-flex align-items-center mb-4">
+        <i class="bi bi-exclamation-triangle-fill fs-4 me-3 text-warning"></i>
+        <div>
+            <strong>Insufficient Dataset Size:</strong> Currently, the database contains <strong>{{ total_records }}</strong> energy records. A minimum of <strong>15 records</strong> is required to perform a valid 80/20 train/test split and train the Multi-Layer Perceptron.
+            <div class="mt-1">
+                <a href="{{ url_for('energy.import_csv') }}" class="btn btn-sm btn-outline-dark mt-1">
+                    <i class="bi bi-file-earmark-arrow-up me-1"></i> Import Historical CSV
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Active ANN Architecture & Metrics Card -->
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <span class="fw-bold text-dark"><i class="bi bi-cpu me-2 text-success"></i> Active Artificial Neural Network Specifications</span>
+            <span class="badge {% if latest_metrics.status == 'Active' %}bg-success{% else %}bg-secondary{% endif %} px-3 py-2">
+                {{ latest_metrics.status }}
+            </span>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-4">
+                <div class="col-lg-6">
+                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-sliders me-1 text-muted"></i> Network Hyperparameters</h6>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm small mb-0">
+                            <tbody>
+                                <tr>
+                                    <th class="bg-light w-50">Algorithm</th>
+                                    <td class="font-monospace">Scikit-learn MLPRegressor</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Hidden Layer Architecture</th>
+                                    <td class="font-monospace">2 Layers: (64, 32 neurons)</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Activation Function</th>
+                                    <td class="font-monospace">ReLU (Rectified Linear Unit)</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Optimization Solver</th>
+                                    <td class="font-monospace">Adam (Stochastic Gradient-Based)</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Feature Preprocessing</th>
+                                    <td class="font-monospace">StandardScaler (Zero-mean, Unit-variance)</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Input Features ($X$)</th>
+                                    <td class="small">Day, Month, DayOfWeek, Weekend, Peak kWh, OffPeak kWh, Appliance Hours, Lag-1, Rolling 7-day Avg</td>
+                                </tr>
+                                <tr>
+                                    <th class="bg-light">Target ($y$)</th>
+                                    <td class="small">Next-day Electricity Consumption (kWh)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <h6 class="fw-bold text-dark mb-3"><i class="bi bi-clipboard-data me-1 text-muted"></i> Evaluation Metrics on Held-out Test Set</h6>
+                    <div class="row g-3 text-center mb-3">
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="text-muted small fw-bold text-uppercase">R² Score (Accuracy)</div>
+                                <div class="fs-3 fw-bold text-success">{{ latest_metrics.r2_score }}</div>
+                                <div class="text-muted" style="font-size: 0.72rem;">Coefficient of Determination</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="text-muted small fw-bold text-uppercase">MAE</div>
+                                <div class="fs-3 fw-bold text-dark">{{ latest_metrics.mae }} <span class="fs-6 fw-normal">kWh</span></div>
+                                <div class="text-muted" style="font-size: 0.72rem;">Mean Absolute Error</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="text-muted small fw-bold text-uppercase">MSE</div>
+                                <div class="fs-3 fw-bold text-dark">{{ latest_metrics.mse }}</div>
+                                <div class="text-muted" style="font-size: 0.72rem;">Mean Squared Error</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 bg-light rounded-3 border">
+                                <div class="text-muted small fw-bold text-uppercase">RMSE</div>
+                                <div class="fs-3 fw-bold text-dark">{{ latest_metrics.rmse }} <span class="fs-6 fw-normal">kWh</span></div>
+                                <div class="text-muted" style="font-size: 0.72rem;">Root Mean Squared Error</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="small text-muted">
+                        <div><i class="bi bi-clock me-1 text-success"></i> Last Training Date: <strong>{{ latest_metrics.training_date }}</strong></div>
+                        <div><i class="bi bi-database me-1 text-success"></i> Split Ratio: <strong>{{ latest_metrics.training_records }} Train records / {{ latest_metrics.test_records }} Test records</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historical Trained Models Table -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3">
+            <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-clock-history me-2 text-muted"></i> Model Version History</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Model Identifier</th>
+                            <th>Training Timestamp</th>
+                            <th>Train / Test Samples</th>
+                            <th>MAE (kWh)</th>
+                            <th>MSE</th>
+                            <th>RMSE (kWh)</th>
+                            <th>R² Score</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for model in all_models %}
+                        <tr>
+                            <td class="fw-semibold font-monospace small">{{ model.model_name }}</td>
+                            <td class="small text-muted">{{ model.training_date.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>{{ model.training_records }} / {{ model.test_records }}</td>
+                            <td class="fw-bold">{{ "%.4f"|format(model.mae) }}</td>
+                            <td>{{ "%.4f"|format(model.mse) }}</td>
+                            <td>{{ "%.4f"|format(model.rmse) }}</td>
+                            <td class="fw-bold text-success">{{ "%.4f"|format(model.r2_score) }}</td>
+                            <td>
+                                <span class="badge {% if model.status == 'Active' %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {{ model.status }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="8" class="text-center py-4 text-muted">
+                                No models trained yet. Click <strong>Train ANN Model</strong> above to build the first neural network.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,179 @@
+{% extends "base.html" %}
+
+{% block title %}Energy Consumption Records - Smart Energy Management{% endblock %}
+{% block page_heading %}Energy Consumption Records{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <!-- Action Bar & Filter Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">Residential Consumption Records</h4>
+            <p class="text-muted small mb-0">Browse, filter, and manage historical electricity usage data.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ url_for('energy.add_record') }}" class="btn btn-primary btn-sm px-3">
+                <i class="bi bi-plus-circle me-1"></i> Add Record
+            </a>
+            {% if current_user.is_admin %}
+            <a href="{{ url_for('energy.import_csv') }}" class="btn btn-outline-secondary btn-sm px-3">
+                <i class="bi bi-file-earmark-arrow-up me-1"></i> Import CSV
+            </a>
+            {% endif %}
+            <a href="{{ url_for('reports.export_csv', user_id=selected_user) }}" class="btn btn-outline-success btn-sm px-3">
+                <i class="bi bi-download me-1"></i> Export CSV
+            </a>
+        </div>
+    </div>
+
+    <!-- Filter Card -->
+    <div class="card mb-4">
+        <div class="card-body p-3">
+            <form method="GET" action="{{ url_for('energy.records') }}" class="row g-2 align-items-end">
+                <div class="col-sm-6 col-md-3">
+                    <label class="form-label small mb-1 text-muted">From Date</label>
+                    <input type="date" name="start_date" class="form-control form-control-sm" value="{{ start_date or '' }}">
+                </div>
+                <div class="col-sm-6 col-md-3">
+                    <label class="form-label small mb-1 text-muted">To Date</label>
+                    <input type="date" name="end_date" class="form-control form-control-sm" value="{{ end_date or '' }}">
+                </div>
+                {% if current_user.is_admin and users %}
+                <div class="col-sm-6 col-md-3">
+                    <label class="form-label small mb-1 text-muted">Filter by Resident</label>
+                    <select name="user_id" class="form-select form-select-sm">
+                        <option value="">All Residents</option>
+                        {% for u in users %}
+                        <option value="{{ u.id }}" {% if selected_user == u.id %}selected{% endif %}>{{ u.full_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                <div class="col-sm-6 col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                        <i class="bi bi-funnel me-1"></i> Filter
+                    </button>
+                    <a href="{{ url_for('energy.records') }}" class="btn btn-outline-secondary btn-sm" title="Reset Filters">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Records Table Card -->
+    <div class="card mb-4">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>#ID</th>
+                            {% if current_user.is_admin %}
+                            <th>Household</th>
+                            {% endif %}
+                            <th>Record Date</th>
+                            <th>Total (kWh)</th>
+                            <th>Peak Load</th>
+                            <th>Off-Peak</th>
+                            <th>Appliance Usage</th>
+                            <th>Est. Cost (₦)</th>
+                            <th>Level</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in records %}
+                        <tr>
+                            <td class="text-muted small">#{{ record.id }}</td>
+                            {% if current_user.is_admin %}
+                            <td class="fw-semibold small">{{ record.user.full_name if record.user else 'Unknown' }}</td>
+                            {% endif %}
+                            <td class="fw-semibold">
+                                {{ record.date.strftime('%Y-%m-%d') }}
+                                {% if record.is_synthetic %}
+                                <span class="badge badge-demo ms-1" title="Synthetic record generated for training / evaluation">Demo Data</span>
+                                {% endif %}
+                            </td>
+                            <td class="fw-bold text-dark">{{ "%.2f"|format(record.electricity_consumption_kwh) }} kWh</td>
+                            <td>{{ "%.2f"|format(record.peak_consumption_kwh) }} kWh</td>
+                            <td>{{ "%.2f"|format(record.off_peak_consumption_kwh) }} kWh</td>
+                            <td>{{ "%.1f"|format(record.appliance_usage_hours) }} hrs</td>
+                            <td class="fw-semibold text-dark">{{ record.estimated_cost | naira }}</td>
+                            <td>
+                                <span class="badge {% if record.consumption_level == 'Low' %}badge-low{% elif record.consumption_level == 'Moderate' %}badge-moderate{% else %}badge-high{% endif %}">
+                                    {{ record.consumption_level }}
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <div class="d-inline-flex gap-1">
+                                    <a href="{{ url_for('energy.edit_record', record_id=record.id) }}" class="btn btn-sm btn-outline-secondary py-1 px-2" title="Edit">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2" data-bs-toggle="modal" data-bs-target="#deleteModal{{ record.id }}" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+
+                                <!-- Delete Confirmation Modal -->
+                                <div class="modal fade" id="deleteModal{{ record.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered modal-sm">
+                                        <div class="modal-content">
+                                            <div class="modal-header border-0 pb-0">
+                                                <h6 class="modal-title fw-bold text-danger"><i class="bi bi-exclamation-triangle me-1"></i> Confirm Delete</h6>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body text-start small">
+                                                Are you sure you want to delete the record for <strong>{{ record.date }}</strong> ({{ record.electricity_consumption_kwh }} kWh)?
+                                            </div>
+                                            <div class="modal-footer border-0 pt-0">
+                                                <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancel</button>
+                                                <form method="POST" action="{{ url_for('energy.delete_record', record_id=record.id) }}" class="d-inline">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="{% if current_user.is_admin %}10{% else %}9{% endif %}" class="text-center py-5 text-muted">
+                                <i class="bi bi-inbox fs-1 d-block mb-2 text-muted"></i>
+                                No consumption records match your criteria.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if pagination.pages > 1 %}
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <span class="small text-muted">Page {{ pagination.page }} of {{ pagination.pages }} ({{ pagination.total }} total items)</span>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('energy.records', page=pagination.prev_num, start_date=start_date, end_date=end_date, user_id=selected_user) }}">Previous</a>
+                </li>
+                {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                    {% if p %}
+                        <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('energy.records', page=p, start_date=start_date, end_date=end_date, user_id=selected_user) }}">{{ p }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                    {% endif %}
+                {% endfor %}
+                <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('energy.records', page=pagination.next_num, start_date=start_date, end_date=end_date, user_id=selected_user) }}">Next</a>
+                </li>
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

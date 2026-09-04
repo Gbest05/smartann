@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}{{ content.hero_title }} - {{ app_name }}{% endblock %}
+
+{% block public_content %}
+<!-- Hero Section with Background & Illustration -->
+<section class="hero-section">
+    <div class="container py-4">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-7 text-center text-lg-start">
+                <div class="hero-badge">
+                    <i class="bi bi-cpu-fill me-2"></i> {{ content.hero_badge }}
+                </div>
+                <h1 class="display-4 fw-bold text-white mb-3 tracking-tight">
+                    {{ content.hero_title }}
+                </h1>
+                <p class="lead text-white-50 mb-4 fs-5" style="max-width: 600px;">
+                    {{ content.hero_subtitle }}
+                </p>
+                <div class="d-flex flex-column flex-sm-row justify-content-center justify-content-lg-start gap-3 mb-4">
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg px-4 py-3 shadow">
+                        <i class="bi bi-lightning-charge-fill me-2"></i> {{ content.hero_cta_text }}
+                    </a>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light btn-lg px-4 py-3">
+                        <i class="bi bi-box-arrow-in-right me-2"></i> Sign In to Portal
+                    </a>
+                </div>
+                <div class="text-white-50 small">
+                    <i class="bi bi-shield-check text-success me-1"></i> {{ content.hero_subtext }}
+                </div>
+            </div>
+            <div class="col-lg-5 d-none d-lg-block text-center">
+                <div class="position-relative">
+                    <img src="{{ url_for('static', filename='images/smart_home.svg') }}" alt="Smart Residential Energy System" class="img-fluid rounded-4 shadow-lg border border-secondary" style="max-height: 420px; border-color: rgba(255,255,255,0.1) !important;">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Core Features Section -->
+<section class="py-5 bg-white" id="features">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <h6 class="text-uppercase fw-bold text-success tracking-wider small">Core Capabilities</h6>
+            <h2 class="fw-bold text-dark">Intelligent Energy Management Features</h2>
+            <p class="text-muted col-md-8 mx-auto">
+                Advanced machine learning analytics and proactive monitoring designed for total residential energy control.
+            </p>
+        </div>
+
+        <div class="row g-4">
+            <!-- Feature 1 -->
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-box">
+                    <div class="feature-icon">
+                        <i class="bi bi-activity"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">{{ content.feature1_title }}</h5>
+                    <p class="text-muted small mb-0">{{ content.feature1_desc }}</p>
+                </div>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-box">
+                    <div class="feature-icon" style="background-color: #FEF3C7; color: #D97706;">
+                        <i class="bi bi-cpu"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">{{ content.feature2_title }}</h5>
+                    <p class="text-muted small mb-0">{{ content.feature2_desc }}</p>
+                </div>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-box">
+                    <div class="feature-icon">
+                        <i class="bi bi-bar-chart-steps"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">{{ content.feature3_title }}</h5>
+                    <p class="text-muted small mb-0">{{ content.feature3_desc }}</p>
+                </div>
+            </div>
+
+            <!-- Feature 4 -->
+            <div class="col-md-6 col-lg-3">
+                <div class="feature-box">
+                    <div class="feature-icon" style="background-color: #DCFCE7; color: #15803D;">
+                        <i class="bi bi-lightbulb-fill"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-2">{{ content.feature4_title }}</h5>
+                    <p class="text-muted small mb-0">{{ content.feature4_desc }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Visual AI Analytics & Architecture Showcase -->
+<section class="py-5 bg-light" id="how-it-works">
+    <div class="container py-4">
+        <div class="text-center mb-5">
+            <h6 class="text-uppercase fw-bold text-success tracking-wider small">AI-Driven Engine</h6>
+            <h2 class="fw-bold text-dark">How Neural Intelligence Optimizes Household Power</h2>
+            <p class="text-muted col-md-8 mx-auto">
+                Discover the seamless workflow from daily consumption logging to neural forecasting and actionable energy savings.
+            </p>
+        </div>
+
+        <div class="row g-4 align-items-stretch">
+            <div class="col-lg-6">
+                <div class="card h-100 p-4 border-0 shadow-sm rounded-4 bg-white">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="badge bg-success py-2 px-3"><i class="bi bi-diagram-3-fill me-1"></i> Neural Network Topology</span>
+                        <span class="badge bg-dark">Multi-Layer Perceptron</span>
+                    </div>
+                    <img src="{{ url_for('static', filename='images/ann_brain.svg') }}" alt="Artificial Neural Network Topology" class="img-fluid rounded-3 mb-3 border">
+                    <h5 class="fw-bold text-dark mb-2">Deep Non-Linear Pattern Learning</h5>
+                    <p class="text-muted small mb-0">
+                        Our model processes 9 key operational and calendar indicators—including appliance runtime, weekend distributions, and previous day baselines—to forecast future energy demands with high precision.
+                    </p>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card h-100 p-4 border-0 shadow-sm rounded-4 bg-white">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="badge bg-amber text-dark py-2 px-3 fw-bold"><i class="bi bi-graph-up me-1"></i> Continuous Telemetry</span>
+                        <span class="badge bg-secondary">Real-Time Forecasts</span>
+                    </div>
+                    <img src="{{ url_for('static', filename='images/energy_analytics.svg') }}" alt="Energy Analytics Dashboard" class="img-fluid rounded-3 mb-3 border">
+                    <h5 class="fw-bold text-dark mb-2">Interactive Visual Analytics</h5>
+                    <p class="text-muted small mb-0">
+                        Visualize 14-day historical energy trends, analyze peak vs off-peak consumption distributions, and track forecasted monthly expenditure in Nigerian Naira (₦).
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Benefits & Household Impact Showcase Section -->
+<section class="py-5 bg-white">
+    <div class="container py-4">
+        <div class="row align-items-center g-5">
+            <!-- Left Benefits Column -->
+            <div class="col-lg-6">
+                <h6 class="text-uppercase fw-bold text-success tracking-wider small">Household Advantages</h6>
+                <h2 class="fw-bold text-dark mb-4">{{ content.impact_title }}</h2>
+                <p class="text-muted mb-4">{{ content.impact_subtitle }}</p>
+
+                <div class="d-flex mb-3">
+                    <div class="me-3 text-success fs-4"><i class="bi bi-check-circle-fill"></i></div>
+                    <div>
+                        <h6 class="fw-bold mb-1">{{ content.benefit1_title }}</h6>
+                        <p class="text-muted small mb-0">{{ content.benefit1_desc }}</p>
+                    </div>
+                </div>
+                <div class="d-flex mb-3">
+                    <div class="me-3 text-success fs-4"><i class="bi bi-check-circle-fill"></i></div>
+                    <div>
+                        <h6 class="fw-bold mb-1">{{ content.benefit2_title }}</h6>
+                        <p class="text-muted small mb-0">{{ content.benefit2_desc }}</p>
+                    </div>
+                </div>
+                <div class="d-flex mb-3">
+                    <div class="me-3 text-success fs-4"><i class="bi bi-check-circle-fill"></i></div>
+                    <div>
+                        <h6 class="fw-bold mb-1">{{ content.benefit3_title }}</h6>
+                        <p class="text-muted small mb-0">{{ content.benefit3_desc }}</p>
+                    </div>
+                </div>
+                <div class="d-flex">
+                    <div class="me-3 text-success fs-4"><i class="bi bi-check-circle-fill"></i></div>
+                    <div>
+                        <h6 class="fw-bold mb-1">{{ content.benefit4_title }}</h6>
+                        <p class="text-muted small mb-0">{{ content.benefit4_desc }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Interactive Impact Showcase Card -->
+            <div class="col-lg-6">
+                <div class="card p-4 p-md-5 shadow border-0 bg-dark text-white rounded-4 position-relative overflow-hidden">
+                    <div class="position-absolute top-0 end-0 p-3 opacity-10">
+                        <i class="bi bi-lightning-charge-fill" style="font-size: 8rem; color: #22C55E;"></i>
+                    </div>
+
+                    <div class="position-relative">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge bg-success py-2 px-3"><i class="bi bi-shield-check me-1"></i> Household Energy Impact</span>
+                            <span class="badge bg-secondary">Smart Efficiency</span>
+                        </div>
+
+                        <h3 class="fw-bold text-white mb-3">{{ content.card_title }}</h3>
+                        <p class="text-white-50 small mb-4">
+                            {{ content.card_desc }}
+                        </p>
+
+                        <!-- Stat Boxes Grid -->
+                        <div class="row g-3 mb-4">
+                            <div class="col-6">
+                                <div class="p-3 rounded-3" style="background-color: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);">
+                                    <div class="text-muted small mb-1">{{ content.card_stat1_label }}</div>
+                                    <div class="fs-4 fw-bold text-success">{{ content.card_stat1_val }}</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="p-3 rounded-3" style="background-color: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);">
+                                    <div class="text-muted small mb-1">{{ content.card_stat2_label }}</div>
+                                    <div class="fs-4 fw-bold text-amber">{{ content.card_stat2_val }}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <ul class="list-unstyled small text-white-50 mb-4">
+                            <li class="mb-2 d-flex align-items-center">
+                                <i class="bi bi-check2-circle text-success me-2 fs-5"></i>
+                                Real-time electricity billing estimation in Nigerian Naira (₦)
+                            </li>
+                            <li class="mb-2 d-flex align-items-center">
+                                <i class="bi bi-check2-circle text-success me-2 fs-5"></i>
+                                Automated peak-hour load shedding and efficiency alerts
+                            </li>
+                            <li class="d-flex align-items-center">
+                                <i class="bi bi-check2-circle text-success me-2 fs-5"></i>
+                                Personalized energy conservation tips based on daily usage
+                            </li>
+                        </ul>
+
+                        <div>
+                            <a href="{{ url_for('auth.register') }}" class="btn btn-primary w-100 py-3 fw-semibold shadow">
+                                <i class="bi bi-person-plus-fill me-2"></i> Register Your Household Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

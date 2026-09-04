@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}404 Page Not Found - Smart Energy Management{% endblock %}
+
+{% block public_content %}
+<div class="container py-5 text-center">
+    <div class="py-5">
+        <div class="display-1 fw-bold text-success mb-3">404</div>
+        <h3 class="fw-bold text-dark mb-2">Page Not Found</h3>
+        <p class="text-muted col-md-6 mx-auto mb-4">
+            The requested energy portal endpoint or resource could not be found.
+        </p>
+        <a href="{{ url_for('dashboard.landing') }}" class="btn btn-primary px-4 py-2">
+            <i class="bi bi-house-door me-2"></i> Return Home
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-5 text-center">
+    <div class="display-1 fw-bold text-success mb-3">404</div>
+    <h3 class="fw-bold text-dark mb-2">Page Not Found</h3>
+    <p class="text-muted col-md-6 mx-auto mb-4">
+        The requested page or record could not be found in the system.
+    </p>
+    <a href="{{ url_for('dashboard.resident_dashboard') }}" class="btn btn-primary px-4 py-2">
+        <i class="bi bi-arrow-left me-2"></i> Back to Dashboard
+    </a>
+</div>
+{% endblock %}

@@ -1,0 +1,233 @@
+{% extends "base.html" %}
+
+{% block title %}Landing Page Editor - Admin Center{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 fw-bold text-dark mb-1">Landing Page Content Manager</h1>
+        <p class="text-muted mb-0">Customize public landing page text, branding, headlines, features, and statistics in real time.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('dashboard.landing') }}" target="_blank" class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-1">
+            <i class="bi bi-box-arrow-up-right"></i> View Live Landing Page
+        </a>
+    </div>
+</div>
+
+<form method="POST" action="{{ url_for('admin.landing_page_editor') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+    <!-- Section 1: Branding & Identity -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-2">
+            <i class="bi bi-tag-fill text-success fs-5"></i>
+            <h5 class="fw-bold mb-0">1. Brand Identity & Navbar</h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Application / Brand Name</label>
+                    <input type="text" name="brand_name" class="form-control" value="{{ content.brand_name }}" required>
+                    <div class="form-text small">Appears on the navbar, browser title, and dashboard headers.</div>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Brand Badge Tag</label>
+                    <input type="text" name="brand_badge" class="form-control" value="{{ content.brand_badge }}" required>
+                    <div class="form-text small">E.g., "ANN", "AI", "PRO" shown next to the logo.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 2: Hero Section -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-2">
+            <i class="bi bi-stars text-success fs-5"></i>
+            <h5 class="fw-bold mb-0">2. Hero Banner Section</h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                <div class="col-md-12">
+                    <label class="form-label fw-semibold">Hero Badge Pill</label>
+                    <input type="text" name="hero_badge" class="form-control" value="{{ content.hero_badge }}" required>
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label fw-semibold">Hero Main Headline</label>
+                    <input type="text" name="hero_title" class="form-control fw-bold" value="{{ content.hero_title }}" required>
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label fw-semibold">Hero Subtitle / Description</label>
+                    <textarea name="hero_subtitle" rows="3" class="form-control" required>{{ content.hero_subtitle }}</textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Hero Primary CTA Button Text</label>
+                    <input type="text" name="hero_cta_text" class="form-control" value="{{ content.hero_cta_text }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Hero Micro-Subtext</label>
+                    <input type="text" name="hero_subtext" class="form-control" value="{{ content.hero_subtext }}" required>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 3: Feature Boxes -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-2">
+            <i class="bi bi-grid-fill text-success fs-5"></i>
+            <h5 class="fw-bold mb-0">3. Feature Cards (4 Key Capabilities)</h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-4">
+                <!-- Feature 1 -->
+                <div class="col-md-6">
+                    <div class="p-3 border rounded-3 bg-light">
+                        <h6 class="fw-bold text-success mb-2"><i class="bi bi-1-circle-fill me-1"></i> Feature 1</h6>
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Title</label>
+                            <input type="text" name="feature1_title" class="form-control form-control-sm" value="{{ content.feature1_title }}" required>
+                        </div>
+                        <div>
+                            <label class="form-label small fw-semibold">Description</label>
+                            <textarea name="feature1_desc" rows="2" class="form-control form-control-sm" required>{{ content.feature1_desc }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 2 -->
+                <div class="col-md-6">
+                    <div class="p-3 border rounded-3 bg-light">
+                        <h6 class="fw-bold text-success mb-2"><i class="bi bi-2-circle-fill me-1"></i> Feature 2</h6>
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Title</label>
+                            <input type="text" name="feature2_title" class="form-control form-control-sm" value="{{ content.feature2_title }}" required>
+                        </div>
+                        <div>
+                            <label class="form-label small fw-semibold">Description</label>
+                            <textarea name="feature2_desc" rows="2" class="form-control form-control-sm" required>{{ content.feature2_desc }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 3 -->
+                <div class="col-md-6">
+                    <div class="p-3 border rounded-3 bg-light">
+                        <h6 class="fw-bold text-success mb-2"><i class="bi bi-3-circle-fill me-1"></i> Feature 3</h6>
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Title</label>
+                            <input type="text" name="feature3_title" class="form-control form-control-sm" value="{{ content.feature3_title }}" required>
+                        </div>
+                        <div>
+                            <label class="form-label small fw-semibold">Description</label>
+                            <textarea name="feature3_desc" rows="2" class="form-control form-control-sm" required>{{ content.feature3_desc }}</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature 4 -->
+                <div class="col-md-6">
+                    <div class="p-3 border rounded-3 bg-light">
+                        <h6 class="fw-bold text-success mb-2"><i class="bi bi-4-circle-fill me-1"></i> Feature 4</h6>
+                        <div class="mb-2">
+                            <label class="form-label small fw-semibold">Title</label>
+                            <input type="text" name="feature4_title" class="form-control form-control-sm" value="{{ content.feature4_title }}" required>
+                        </div>
+                        <div>
+                            <label class="form-label small fw-semibold">Description</label>
+                            <textarea name="feature4_desc" rows="2" class="form-control form-control-sm" required>{{ content.feature4_desc }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 4: Household Impact & Benefits Section -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-2">
+            <i class="bi bi-graph-up-arrow text-success fs-5"></i>
+            <h5 class="fw-bold mb-0">4. Household Benefits & Impact Section</h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Section Headline</label>
+                    <input type="text" name="impact_title" class="form-control" value="{{ content.impact_title }}" required>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Section Subtitle</label>
+                    <input type="text" name="impact_subtitle" class="form-control" value="{{ content.impact_subtitle }}" required>
+                </div>
+            </div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold text-muted">Benefit 1 Title & Description</label>
+                    <input type="text" name="benefit1_title" class="form-control form-control-sm mb-1" value="{{ content.benefit1_title }}" required>
+                    <textarea name="benefit1_desc" rows="2" class="form-control form-control-sm" required>{{ content.benefit1_desc }}</textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold text-muted">Benefit 2 Title & Description</label>
+                    <input type="text" name="benefit2_title" class="form-control form-control-sm mb-1" value="{{ content.benefit2_title }}" required>
+                    <textarea name="benefit2_desc" rows="2" class="form-control form-control-sm" required>{{ content.benefit2_desc }}</textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold text-muted">Benefit 3 Title & Description</label>
+                    <input type="text" name="benefit3_title" class="form-control form-control-sm mb-1" value="{{ content.benefit3_title }}" required>
+                    <textarea name="benefit3_desc" rows="2" class="form-control form-control-sm" required>{{ content.benefit3_desc }}</textarea>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label small fw-semibold text-muted">Benefit 4 Title & Description</label>
+                    <input type="text" name="benefit4_title" class="form-control form-control-sm mb-1" value="{{ content.benefit4_title }}" required>
+                    <textarea name="benefit4_desc" rows="2" class="form-control form-control-sm" required>{{ content.benefit4_desc }}</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 5: Live Showcase Card -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-white py-3 border-bottom d-flex align-items-center gap-2">
+            <i class="bi bi-card-heading text-success fs-5"></i>
+            <h5 class="fw-bold mb-0">5. Interactive Impact Showcase Box</h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                <div class="col-md-12">
+                    <label class="form-label fw-semibold">Card Title</label>
+                    <input type="text" name="card_title" class="form-control" value="{{ content.card_title }}" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Stat 1 Label</label>
+                    <input type="text" name="card_stat1_label" class="form-control" value="{{ content.card_stat1_label }}" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Stat 1 Value</label>
+                    <input type="text" name="card_stat1_val" class="form-control text-success fw-bold" value="{{ content.card_stat1_val }}" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Stat 2 Label</label>
+                    <input type="text" name="card_stat2_label" class="form-control" value="{{ content.card_stat2_label }}" required>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold">Stat 2 Value</label>
+                    <input type="text" name="card_stat2_val" class="form-control text-amber fw-bold" value="{{ content.card_stat2_val }}" required>
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label fw-semibold">Card Description Text</label>
+                    <textarea name="card_desc" rows="2" class="form-control" required>{{ content.card_desc }}</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit Action Button -->
+    <div class="d-flex justify-content-end gap-2 mb-5">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary px-4">Cancel</a>
+        <button type="submit" class="btn btn-primary px-5 py-2 fw-semibold">
+            <i class="bi bi-check-circle me-1"></i> Save & Publish Changes
+        </button>
+    </div>
+</form>
+{% endblock %}

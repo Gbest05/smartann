@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}ANN Energy Consumption Prediction - Smart Energy Management{% endblock %}
+{% block page_heading %}Artificial Neural Network Prediction{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="row g-4">
+        <!-- Left Column: Prediction Form -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0 h-100">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="bi bi-cpu-fill text-success me-2"></i> Future Demand Forecast
+                    </h5>
+                    <span class="badge bg-light text-dark border">
+                        <i class="bi bi-lightning-charge text-warning me-1"></i> MLPRegressor
+                    </span>
+                </div>
+                <div class="card-body p-4">
+                    <p class="text-muted small mb-4">
+                        Input your expected appliance operating schedule and peak hour estimates. The trained Artificial Neural Network will forecast future electricity consumption (kWh) and calculate projected expenditure in Nigerian Naira (₦).
+                    </p>
+
+                    <form method="POST" action="{{ url_for('prediction.index') }}" novalidate>
+                        {{ form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            <label class="form-label" for="{{ form.prediction_date.id }}"><i class="bi bi-calendar-event me-1 text-muted"></i> {{ form.prediction_date.label.text }}</label>
+                            {{ form.prediction_date(class="form-control" + (" is-invalid" if form.prediction_date.errors else "")) }}
+                            {% for error in form.prediction_date.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-sm-6">
+                                <label class="form-label" for="{{ form.appliance_usage_hours.id }}"><i class="bi bi-clock me-1 text-muted"></i> {{ form.appliance_usage_hours.label.text }}</label>
+                                {{ form.appliance_usage_hours(class="form-control" + (" is-invalid" if form.appliance_usage_hours.errors else ""), placeholder="e.g. 8.0") }}
+                                {% for error in form.appliance_usage_hours.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-sm-6">
+                                <label class="form-label" for="{{ form.recent_avg_kwh.id }}"><i class="bi bi-speedometer2 me-1 text-muted"></i> {{ form.recent_avg_kwh.label.text }}</label>
+                                {{ form.recent_avg_kwh(class="form-control" + (" is-invalid" if form.recent_avg_kwh.errors else ""), placeholder="e.g. 8.5") }}
+                                {% for error in form.recent_avg_kwh.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-sm-6">
+                                <label class="form-label" for="{{ form.expected_peak_kwh.id }}"><i class="bi bi-sun me-1 text-warning"></i> {{ form.expected_peak_kwh.label.text }}</label>
+                                {{ form.expected_peak_kwh(class="form-control" + (" is-invalid" if form.expected_peak_kwh.errors else ""), placeholder="e.g. 4.5") }}
+                                {% for error in form.expected_peak_kwh.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-sm-6">
+                                <label class="form-label" for="{{ form.expected_off_peak_kwh.id }}"><i class="bi bi-moon-stars me-1 text-muted"></i> {{ form.expected_off_peak_kwh.label.text }}</label>
+                                {{ form.expected_off_peak_kwh(class="form-control" + (" is-invalid" if form.expected_off_peak_kwh.errors else ""), placeholder="e.g. 3.5") }}
+                                {% for error in form.expected_off_peak_kwh.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-primary py-2 fw-semibold") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Prediction Result or Status Card -->
+        <div class="col-lg-6">
+            {% if prediction_result %}
+            <!-- Prediction Output Card (Prompt 12 & 13) -->
+            <div class="card shadow-sm border-success mb-4" style="border-left: 5px solid #16A34A !important;">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-success"><i class="bi bi-check-circle-fill me-2"></i> ANN Forecast Generated</span>
+                    <span class="badge bg-light text-dark border">{{ prediction_result.target_date }}</span>
+                </div>
+                <div class="card-body p-4">
+                    <div class="text-center py-2 mb-3">
+                        <div class="text-muted small fw-bold text-uppercase mb-1">Predicted Electricity Consumption</div>
+                        <div class="display-5 fw-bold text-dark mb-1">
+                            {{ prediction_result.predicted_consumption_kwh }} <span class="fs-4 text-muted fw-normal">kWh</span>
+                        </div>
+                        <div class="fs-5 fw-semibold text-success">
+                            Estimated Cost: {{ prediction_result.estimated_cost | naira }}
+                        </div>
+                    </div>
+
+                    <div class="row g-2 text-center mb-4">
+                        <div class="col-4">
+                            <div class="p-2 bg-light rounded-3 border">
+                                <div class="text-muted" style="font-size: 0.72rem;">CONSUMPTION TIER</div>
+                                <span class="badge {% if prediction_result.consumption_level == 'Low' %}badge-low{% elif prediction_result.consumption_level == 'Moderate' %}badge-moderate{% else %}badge-high{% endif %} mt-1">
+                                    {{ prediction_result.consumption_level }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 bg-light rounded-3 border">
+                                <div class="text-muted" style="font-size: 0.72rem;">ACTIVE TARIFF</div>
+                                <div class="fw-bold text-dark small mt-1">₦{{ "%.2f"|format(prediction_result.tariff_rate) }}/kWh</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="p-2 bg-light rounded-3 border">
+                                <div class="text-muted" style="font-size: 0.72rem;">MODEL ENGINE</div>
+                                <div class="fw-semibold text-dark small mt-1 text-truncate" title="{{ prediction_result.model_version }}">ANN MLP</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {% if prediction_result.recommendations %}
+                    <h6 class="fw-bold text-dark mb-2"><i class="bi bi-lightbulb-fill text-warning me-1"></i> Contextual Energy Advice:</h6>
+                    <div class="list-group list-group-flush mb-0">
+                        {% for tip in prediction_result.recommendations %}
+                        <div class="list-group-item px-0 py-2 bg-transparent">
+                            <div class="d-flex align-items-start">
+                                <i class="bi {{ tip.icon }} text-success me-2 mt-1"></i>
+                                <div>
+                                    <div class="fw-bold small">{{ tip.title }}</div>
+                                    <div class="text-muted" style="font-size: 0.78rem;">{{ tip.message }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <!-- ANN Model Status Card -->
+            <div class="card shadow-sm border-0 mb-4 bg-light">
+                <div class="card-body p-4 text-center py-5">
+                    <div class="brand-icon bg-light text-success border border-success p-3 rounded-circle d-inline-flex mb-3" style="width:64px; height:64px;">
+                        <i class="bi bi-cpu fs-2"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark">Ready for Prediction</h5>
+                    <p class="text-muted small col-md-10 mx-auto mb-4">
+                        Fill in the forecast parameters on the left to simulate household demand with the neural network.
+                    </p>
+                    <div class="card p-3 border text-start bg-white mx-auto" style="max-width: 380px;">
+                        <div class="fw-bold small text-dark mb-1"><i class="bi bi-check2-circle text-success me-1"></i> Active Model Status:</div>
+                        <div class="text-muted small mb-1">Model: <strong>{{ model_metrics.model_name }}</strong></div>
+                        <div class="text-muted small mb-1">Accuracy (R²): <strong>{{ model_metrics.r2_score }}</strong></div>
+                        <div class="text-muted small">Mean Error (MAE): <strong>{{ model_metrics.mae }} kWh</strong></div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Recent Predictions List -->
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <span class="fw-bold text-dark"><i class="bi bi-clock-history me-2 text-muted"></i> Your Recent Predictions</span>
+                    <a href="{{ url_for('prediction.history') }}" class="btn btn-sm btn-link text-success p-0">View All</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0 small">
+                            <thead>
+                                <tr>
+                                    <th>Target Date</th>
+                                    <th>Predicted</th>
+                                    <th>Cost (₦)</th>
+                                    <th>Tier</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in recent_predictions %}
+                                <tr>
+                                    <td class="fw-semibold">{{ p.prediction_date.strftime('%Y-%m-%d') }}</td>
+                                    <td class="fw-bold text-dark">{{ "%.2f"|format(p.predicted_consumption_kwh) }} kWh</td>
+                                    <td>{{ p.estimated_cost | naira }}</td>
+                                    <td>
+                                        <span class="badge {% if p.consumption_level == 'Low' %}badge-low{% elif p.consumption_level == 'Moderate' %}badge-moderate{% else %}badge-high{% endif %}">
+                                            {{ p.consumption_level }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-3 text-muted">No prior predictions generated yet.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Create Account - {{ app_name }}{% endblock %}
+
+{% block public_content %}
+<div class="container-fluid d-flex flex-column align-items-center justify-content-center flex-grow-1 py-3" style="min-height: 100vh; overflow: hidden; background-color: #F8FAFC;">
+    <div class="w-100" style="max-width: 480px;">
+        <!-- Back to Home Link -->
+        <div class="mb-3">
+            <a href="{{ url_for('dashboard.landing') }}" class="text-decoration-none text-muted small d-inline-flex align-items-center gap-2 fw-semibold p-1 hover-success">
+                <i class="bi bi-arrow-left fs-6"></i> Back to Home
+            </a>
+        </div>
+
+        <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-body p-4">
+                <div class="text-center mb-3">
+                    <div class="brand-icon bg-success text-white p-2 rounded-3 d-inline-flex align-items-center justify-content-center mb-2 shadow-sm" style="width:44px; height:44px;">
+                        <i class="bi bi-person-plus-fill fs-5"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark mb-1">Create Account</h4>
+                    <p class="text-muted small mb-0">Register for intelligent energy management</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('auth.register') }}" novalidate>
+                    {{ form.hidden_tag() }}
+
+                    <div class="row g-2 mb-2">
+                        <div class="col-sm-6">
+                            <label class="form-label small fw-semibold mb-1" for="{{ form.full_name.id }}">
+                                <i class="bi bi-person me-1 text-muted"></i> {{ form.full_name.label.text }}
+                            </label>
+                            {{ form.full_name(class="form-control form-control-sm" + (" is-invalid" if form.full_name.errors else ""), placeholder="Full Name", autofocus=True) }}
+                            {% for error in form.full_name.errors %}
+                            <div class="invalid-feedback small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="col-sm-6">
+                            <label class="form-label small fw-semibold mb-1" for="{{ form.email.id }}">
+                                <i class="bi bi-envelope me-1 text-muted"></i> {{ form.email.label.text }}
+                            </label>
+                            {{ form.email(class="form-control form-control-sm" + (" is-invalid" if form.email.errors else ""), placeholder="name@example.com") }}
+                            {% for error in form.email.errors %}
+                            <div class="invalid-feedback small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-2">
+                        <div class="col-sm-6">
+                            <label class="form-label small fw-semibold mb-1" for="{{ form.password.id }}">
+                                <i class="bi bi-lock me-1 text-muted"></i> {{ form.password.label.text }}
+                            </label>
+                            <div class="input-group input-group-sm">
+                                {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else ""), placeholder="Password (min 6)", id="regPassword") }}
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('regPassword', 'regPassIcon')" title="Show/Hide password">
+                                    <i class="bi bi-eye" id="regPassIcon"></i>
+                                </button>
+                            </div>
+                            {% for error in form.password.errors %}
+                            <div class="text-danger small mt-1" style="font-size: 0.75rem;">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label small fw-semibold mb-1" for="{{ form.password2.id }}">
+                                <i class="bi bi-lock-fill me-1 text-muted"></i> Confirm
+                            </label>
+                            <div class="input-group input-group-sm">
+                                {{ form.password2(class="form-control" + (" is-invalid" if form.password2.errors else ""), placeholder="Confirm Password", id="regPassword2") }}
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePasswordVisibility('regPassword2', 'regPass2Icon')" title="Show/Hide password">
+                                    <i class="bi bi-eye" id="regPass2Icon"></i>
+                                </button>
+                            </div>
+                            {% for error in form.password2.errors %}
+                            <div class="text-danger small mt-1" style="font-size: 0.75rem;">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold mb-1" for="{{ form.role.id }}">
+                            <i class="bi bi-shield me-1 text-muted"></i> Account Role
+                        </label>
+                        {{ form.role(class="form-select form-select-sm" + (" is-invalid" if form.role.errors else "")) }}
+                        {% for error in form.role.errors %}
+                        <div class="invalid-feedback small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-grid mb-3">
+                        {{ form.submit(class="btn btn-primary py-2 fw-semibold shadow-sm") }}
+                    </div>
+
+                    <div class="text-center text-muted small">
+                        Already registered? <a href="{{ url_for('auth.login') }}" class="fw-semibold text-success text-decoration-none">Sign In</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePasswordVisibility(inputId, iconId) {
+    const input = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('bi-eye');
+        icon.classList.add('bi-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('bi-eye-slash');
+        icon.classList.add('bi-eye');
+    }
+}
+</script>
+{% endblock %}

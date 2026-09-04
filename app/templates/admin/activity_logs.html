@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Activity Logs - Smart Energy Management{% endblock %}
+{% block page_heading %}System Activity & Audit Logs{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-0">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+        <div>
+            <h4 class="fw-bold mb-1">System Audit Trail</h4>
+            <p class="text-muted small mb-0">Complete historical security, data modification, and ANN training activity log.</p>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-body p-3">
+            <form method="GET" action="{{ url_for('admin.activity_logs') }}" class="row g-2 align-items-center">
+                <div class="col-sm-6 col-md-4">
+                    <select name="action" class="form-select form-select-sm">
+                        <option value="">All Activity Types</option>
+                        <option value="LOGIN" {% if action_filter == 'LOGIN' %}selected{% endif %}>User Sign-In (LOGIN)</option>
+                        <option value="REGISTER" {% if action_filter == 'REGISTER' %}selected{% endif %}>New Account (REGISTER)</option>
+                        <option value="ADD_RECORD" {% if action_filter == 'ADD_RECORD' %}selected{% endif %}>Add Consumption Record</option>
+                        <option value="EDIT_RECORD" {% if action_filter == 'EDIT_RECORD' %}selected{% endif %}>Edit Consumption Record</option>
+                        <option value="DELETE_RECORD" {% if action_filter == 'DELETE_RECORD' %}selected{% endif %}>Delete Consumption Record</option>
+                        <option value="CSV_IMPORT" {% if action_filter == 'CSV_IMPORT' %}selected{% endif %}>CSV Data Import</option>
+                        <option value="TRAIN_ANN_MODEL" {% if action_filter == 'TRAIN_ANN_MODEL' %}selected{% endif %}>Train ANN Model</option>
+                        <option value="PREDICT_ENERGY" {% if action_filter == 'PREDICT_ENERGY' %}selected{% endif %}>AI Energy Prediction</option>
+                        <option value="UPDATE_SETTINGS" {% if action_filter == 'UPDATE_SETTINGS' %}selected{% endif %}>Update System Settings</option>
+                    </select>
+                </div>
+                <div class="col-sm-6 col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary btn-sm px-3">
+                        <i class="bi bi-funnel me-1"></i> Filter
+                    </button>
+                    <a href="{{ url_for('admin.activity_logs') }}" class="btn btn-outline-secondary btn-sm">Reset</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Logs Table -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>#ID</th>
+                            <th>Timestamp (UTC)</th>
+                            <th>User Account</th>
+                            <th>Action Type</th>
+                            <th>Description</th>
+                            <th>Client IP</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td class="text-muted small">#{{ log.id }}</td>
+                            <td class="small text-muted">{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                            <td class="fw-semibold small">
+                                {% if log.user %}
+                                {{ log.user.full_name }} ({{ log.user.email }})
+                                {% else %}
+                                <span class="text-muted">System</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge {% if log.action in ['LOGIN', 'LOGOUT'] %}bg-secondary{% elif log.action in ['TRAIN_ANN_MODEL', 'CSV_IMPORT'] %}bg-success{% elif log.action in ['DELETE_RECORD', 'DELETE_USER'] %}bg-danger{% else %}bg-warning text-dark{% endif %}">
+                                    {{ log.action }}
+                                </span>
+                            </td>
+                            <td class="small text-dark">{{ log.description }}</td>
+                            <td class="small font-monospace text-muted">{{ log.ip_address or '—' }}</td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-4 text-muted">No activity logs found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if pagination.pages > 1 %}
+        <div class="card-footer d-flex justify-content-between align-items-center">
+            <span class="small text-muted">Page {{ pagination.page }} of {{ pagination.pages }}</span>
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.activity_logs', page=pagination.prev_num, action=action_filter) }}">Previous</a>
+                </li>
+                {% for p in pagination.iter_pages() %}
+                    {% if p %}
+                        <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                            <a class="page-link" href="{{ url_for('admin.activity_logs', page=p, action=action_filter) }}">{{ p }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('admin.activity_logs', page=pagination.next_num, action=action_filter) }}">Next</a>
+                </li>
+            </ul>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
