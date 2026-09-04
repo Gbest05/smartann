@@ -9,6 +9,13 @@ from app.ml.train_model import train_ann_model
 
 app = create_app(os.environ.get('FLASK_ENV', 'default'))
 
+# Ensure database tables exist automatically on startup
+with app.app_context():
+    try:
+        db.create_all()
+    except Exception as e:
+        app.logger.warning(f"Startup database initialization warning: {e}")
+
 
 def init_db_func():
     """Create all database tables."""
