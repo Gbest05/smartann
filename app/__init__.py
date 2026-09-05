@@ -17,16 +17,16 @@ def create_app(config_name: str = None) -> Flask:
     if config_name is None:
         config_name = os.environ.get('FLASK_ENV', 'default')
 
-    app = Flask(__name__)
-    app.config.from_object(config.get(config_name, Config))
+    application = Flask(__name__)
+    application.config.from_object(config.get(config_name, Config))
 
     # Initialize Extensions
-    db.init_app(app)
-    csrf.init_app(app)
-    migrate.init_app(app, db)
+    db.init_app(application)
+    csrf.init_app(application)
+    migrate.init_app(application, db)
 
     # Configure Login Manager
-    login_manager.init_app(app)
+    login_manager.init_app(application)
     login_manager.login_view = 'auth.login'
     login_manager.login_message = 'Please sign in to access your energy management portal.'
     login_manager.login_message_category = 'warning'
@@ -43,7 +43,7 @@ def create_app(config_name: str = None) -> Flask:
             return None
 
     # Health Check Endpoint for Cloud Platforms / Load Balancers
-    @app.route('/healthz')
+    @application.route('/healthz')
     def health_check():
         return {'status': 'healthy', 'service': 'smart-energy-management'}, 200
 
@@ -56,22 +56,22 @@ def create_app(config_name: str = None) -> Flask:
     from app.routes.reports import reports_bp
     from app.routes.api import api_bp
 
-    app.register_blueprint(auth_bp)
-    app.register_blueprint(dashboard_bp)
-    app.register_blueprint(energy_bp)
-    app.register_blueprint(prediction_bp)
-    app.register_blueprint(admin_bp)
-    app.register_blueprint(reports_bp)
-    app.register_blueprint(api_bp)
+    application.register_blueprint(auth_bp)
+    application.register_blueprint(dashboard_bp)
+    application.register_blueprint(energy_bp)
+    application.register_blueprint(prediction_bp)
+    application.register_blueprint(admin_bp)
+    application.register_blueprint(reports_bp)
+    application.register_blueprint(api_bp)
 
     # Custom Jinja Template Filters
     from app.utils.helpers import format_naira, classify_consumption
 
-    @app.template_filter('naira')
+    @application.template_filter('naira')
     def naira_filter(amount):
         return format_naira(amount)
 
-    @app.template_filter('consumption_badge')
+    @application.template_filter('consumption_badge')
     def consumption_badge_filter(level_or_kwh):
         if isinstance(level_or_kwh, (int, float)):
             level = classify_consumption(level_or_kwh)
@@ -87,7 +87,7 @@ def create_app(config_name: str = None) -> Flask:
         return 'bg-secondary text-white'
 
     # Template Global Context Processors
-    @app.context_processor
+    @application.context_processor
     def inject_global_vars():
         from app.utils.helpers import get_landing_content, get_active_tariff
         try:
@@ -110,15 +110,15 @@ def create_app(config_name: str = None) -> Flask:
         }
 
     # Error Handlers
-    @app.errorhandler(403)
+    @application.errorhandler(403)
     def forbidden_error(error):
         return render_template('errors/403.html'), 403
 
-    @app.errorhandler(404)
+    @application.errorhandler(404)
     def not_found_error(error):
         return render_template('errors/404.html'), 404
 
-    @app.errorhandler(500)
+    @application.errorhandler(500)
     def internal_error(error):
         try:
             db.session.rollback()
@@ -126,12 +126,12 @@ def create_app(config_name: str = None) -> Flask:
             pass
         return render_template('errors/500.html'), 500
 
-    return app
+    return application
 
 
-def init_db_and_defaults(app: Flask):
+def init_db_and_defaults(app_instance: Flask):
     """Ensure database tables exist and seed essential defaults."""
-    with app.app_context():
+    with app_instance.app_context():
         try:
             db.create_all()
             # Ensure default settings exist
@@ -169,4 +169,9 @@ def init_db_and_defaults(app: Flask):
                 db.session.rollback()
             except Exception:
                 pass
-            app.logger.warning(f"Database startup sync: {e}")
+            app_instance.logger.warning(f"Database startup sync: {e}")
+
+
+# Default application instance for WSGI servers calling `gunicorn app:app` or `gunicorn app`
+app = create_app(os.environ.get('FLASK_ENV', 'production'))
+init_db_and_defaults(app)
