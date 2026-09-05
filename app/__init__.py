@@ -33,7 +33,12 @@ def create_app(config_name: str = None) -> Flask:
 
     @login_manager.user_loader
     def load_user(user_id):
-        return User.query.get(int(user_id))
+        return db.session.get(User, int(user_id))
+
+    # Health Check Endpoint for Cloud Platforms / Load Balancers
+    @app.route('/healthz')
+    def health_check():
+        return {'status': 'healthy', 'service': 'smart-energy-management'}, 200
 
     # Register Blueprints
     from app.routes.auth import auth_bp
@@ -101,3 +106,63 @@ def create_app(config_name: str = None) -> Flask:
         return render_template('errors/500.html'), 500
 
     return app
+
+
+def _ensure_startup_data(app_instance):
+    """Ensure database tables and essential initial configurations exist without overwriting."""
+    with app_instance.app_context():
+        try:
+            db.create_all()
+            from app.models import User, SystemSetting, Recommendation
+
+            # 1. System Settings Defaults
+            settings_defaults = [
+                ('tariff_per_kwh', '120.0', 'Electricity tariff rate in Nigerian Naira per kWh (NGN/kWh)'),
+                ('low_consumption_threshold', '5.0', 'Daily consumption threshold in kWh for Low tier (Green)'),
+                ('moderate_consumption_threshold', '10.0', 'Daily consumption threshold in kWh for Moderate tier (Amber)')
+            ]
+            for key, val, desc in settings_defaults:
+                if not SystemSetting.query.filter_by(key=key).first():
+                    db.session.add(SystemSetting(key=key, value=val, description=desc))
+
+            # 2. Ensure initial administrator if no admin exists
+            if not User.query.filter_by(role='admin').first():
+                admin_email = os.environ.get('ADMIN_EMAIL', 'admin@energy.test').lower().strip()
+                admin_pass = os.environ.get('ADMIN_PASSWORD', 'AdminPass123!')
+                admin_name = os.environ.get('ADMIN_NAME', 'Project Administrator')
+                admin = User(full_name=admin_name, email=admin_email, role='admin')
+                admin.set_password(admin_pass)
+                db.session.add(admin)
+
+            # 3. Default recommendation rules
+            if not Recommendation.query.first():
+                recs_data = [
+                    ("Air Conditioning Temperature Optimization", "Keep cooling thermostats set to 24°C-26°C. Each degree below 24°C increases electricity consumption by 6-8%.", "high", "bi-snow"),
+                    ("Water Heater Operating Schedule", "Switch off electric water heaters once warm. Avoid continuous 24-hour boiling standby.", "high", "bi-fire"),
+                    ("Off-Peak Appliance Scheduling", "Operate washing machines, pumping machines, and iron boxes during off-peak morning hours.", "moderate", "bi-clock-history"),
+                    ("LED Lighting Transition", "Ensure all room fixtures use energy-efficient LED luminaires instead of halogen or incandescent bulbs.", "moderate", "bi-lightbulb-fill"),
+                    ("Natural Cross-Ventilation", "Open windows in the early morning and evening to cool interior rooms naturally.", "low", "bi-wind")
+                ]
+                for title, msg, tier, icon in recs_data:
+                    db.session.add(Recommendation(title=title, message=msg, consumption_level=tier, icon=icon, is_active=True))
+
+            db.session.commit()
+        except Exception as exc:
+            db.session.rollback()
+            app_instance.logger.warning(f"Startup database initialization: {exc}")
+
+
+# Module-level __getattr__ for WSGI servers and cloud deployments (e.g. Render running 'gunicorn app:app')
+def __getattr__(name: str):
+    if name == 'app':
+        global _wsgi_app
+        try:
+            return _wsgi_app
+        except NameError:
+            target_env = os.environ.get('FLASK_ENV', 'production' if os.environ.get('RENDER') else 'default')
+            _wsgi_app = create_app(target_env)
+            _ensure_startup_data(_wsgi_app)
+            return _wsgi_app
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+

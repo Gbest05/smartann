@@ -26,6 +26,12 @@ class Config:
         instance_dir.mkdir(exist_ok=True)
         SQLALCHEMY_DATABASE_URI = f'sqlite:///{(instance_dir / "energy.db").as_posix()}'
 
+    # Database connection pooling for PostgreSQL reliability
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_pre_ping": True,
+        "pool_recycle": 300,
+    }
+
     # Application Business Logic Defaults
     DEFAULT_TARIFF_PER_KWH = float(os.environ.get('DEFAULT_TARIFF_PER_KWH', 120.0))
     LOW_CONSUMPTION_THRESHOLD = float(os.environ.get('LOW_CONSUMPTION_THRESHOLD', 5.0))
@@ -46,7 +52,6 @@ class DevelopmentConfig(Config):
 class ProductionConfig(Config):
     """Production environment configuration."""
     DEBUG = False
-    SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
 
@@ -63,5 +68,5 @@ config = {
     'development': DevelopmentConfig,
     'production': ProductionConfig,
     'testing': TestingConfig,
-    'default': DevelopmentConfig
+    'default': ProductionConfig if os.environ.get('FLASK_ENV') == 'production' else DevelopmentConfig
 }
