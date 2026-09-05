@@ -18,7 +18,10 @@ def get_system_setting(key: str, default_val: str) -> str:
         if setting and setting.value:
             return setting.value
     except Exception:
-        pass
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
     return default_val
 
 
@@ -35,7 +38,10 @@ def set_system_setting(key: str, value: str, description: str = None):
                 setting.description = description
         db.session.commit()
     except Exception:
-        db.session.rollback()
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
 
 
 def get_landing_content() -> dict:
@@ -81,8 +87,15 @@ def get_landing_content() -> dict:
     }
 
     result = {}
-    for key, def_val in defaults.items():
-        result[key] = get_system_setting(key, def_val)
+    try:
+        for key, def_val in defaults.items():
+            result[key] = get_system_setting(key, def_val)
+    except Exception:
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        return defaults
     return result
 
 
@@ -92,7 +105,7 @@ def get_active_tariff() -> float:
     val = get_system_setting('tariff_per_kwh', default_tariff)
     try:
         return float(val)
-    except ValueError:
+    except (ValueError, TypeError):
         return 120.0
 
 
@@ -106,12 +119,12 @@ def get_system_thresholds() -> tuple[float, float]:
     
     try:
         low_f = float(low_val)
-    except ValueError:
+    except (ValueError, TypeError):
         low_f = 5.0
         
     try:
         mod_f = float(mod_val)
-    except ValueError:
+    except (ValueError, TypeError):
         mod_f = 10.0
         
     return low_f, mod_f
@@ -157,5 +170,8 @@ def log_activity(user_id: int, action: str, description: str, ip_address: str = 
         db.session.add(log_entry)
         db.session.commit()
     except Exception as e:
-        db.session.rollback()
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
         current_app.logger.warning(f"Could not log activity: {e}")

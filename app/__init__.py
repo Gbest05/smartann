@@ -5,7 +5,7 @@ from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
 from flask_migrate import Migrate
 from config import config, Config
-from app.models import db, User
+from app.models import db, User, SystemSetting
 
 login_manager = LoginManager()
 csrf = CSRFProtect()
@@ -33,7 +33,14 @@ def create_app(config_name: str = None) -> Flask:
 
     @login_manager.user_loader
     def load_user(user_id):
-        return db.session.get(User, int(user_id))
+        try:
+            return db.session.get(User, int(user_id))
+        except Exception:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            return None
 
     # Health Check Endpoint for Cloud Platforms / Load Balancers
     @app.route('/healthz')
@@ -82,12 +89,23 @@ def create_app(config_name: str = None) -> Flask:
     # Template Global Context Processors
     @app.context_processor
     def inject_global_vars():
-        from app.utils.helpers import get_landing_content
-        landing_info = get_landing_content()
+        from app.utils.helpers import get_landing_content, get_active_tariff
+        try:
+            landing_info = get_landing_content()
+            active_tariff = get_active_tariff()
+        except Exception:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            landing_info = {}
+            active_tariff = 120.0
+
         return {
             'current_year': datetime.now().year,
             'app_name': landing_info.get('brand_name', 'SmartEnergy AI'),
             'brand_badge': landing_info.get('brand_badge', 'ANN'),
+            'active_tariff': active_tariff,
             'currency_symbol': '₦'
         }
 
@@ -102,67 +120,53 @@ def create_app(config_name: str = None) -> Flask:
 
     @app.errorhandler(500)
     def internal_error(error):
-        db.session.rollback()
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
         return render_template('errors/500.html'), 500
 
     return app
 
 
-def _ensure_startup_data(app_instance):
-    """Ensure database tables and essential initial configurations exist without overwriting."""
-    with app_instance.app_context():
+def init_db_and_defaults(app: Flask):
+    """Ensure database tables exist and seed essential defaults."""
+    with app.app_context():
         try:
             db.create_all()
-            from app.models import User, SystemSetting, Recommendation
+            # Ensure default settings exist
+            if SystemSetting.query.count() == 0:
+                db.session.add(SystemSetting(key='tariff_per_kwh', value='120.0', description='Electricity Tariff'))
+                db.session.add(SystemSetting(key='low_consumption_threshold', value='5.0', description='Low Threshold'))
+                db.session.add(SystemSetting(key='moderate_consumption_threshold', value='10.0', description='Mod Threshold'))
+                db.session.commit()
 
-            # 1. System Settings Defaults
-            settings_defaults = [
-                ('tariff_per_kwh', '120.0', 'Electricity tariff rate in Nigerian Naira per kWh (NGN/kWh)'),
-                ('low_consumption_threshold', '5.0', 'Daily consumption threshold in kWh for Low tier (Green)'),
-                ('moderate_consumption_threshold', '10.0', 'Daily consumption threshold in kWh for Moderate tier (Amber)')
-            ]
-            for key, val, desc in settings_defaults:
-                if not SystemSetting.query.filter_by(key=key).first():
-                    db.session.add(SystemSetting(key=key, value=val, description=desc))
+            # Ensure default admin account exists
+            admin = User.query.filter_by(role='admin').first()
+            if not admin:
+                admin_user = User(
+                    full_name='Project Administrator',
+                    email='admin@energy.test',
+                    role='admin'
+                )
+                admin_user.set_password('AdminPass123!')
+                db.session.add(admin_user)
+                db.session.commit()
 
-            # 2. Ensure initial administrator if no admin exists
-            if not User.query.filter_by(role='admin').first():
-                admin_email = os.environ.get('ADMIN_EMAIL', 'admin@energy.test').lower().strip()
-                admin_pass = os.environ.get('ADMIN_PASSWORD', 'AdminPass123!')
-                admin_name = os.environ.get('ADMIN_NAME', 'Project Administrator')
-                admin = User(full_name=admin_name, email=admin_email, role='admin')
-                admin.set_password(admin_pass)
-                db.session.add(admin)
-
-            # 3. Default recommendation rules
-            if not Recommendation.query.first():
-                recs_data = [
-                    ("Air Conditioning Temperature Optimization", "Keep cooling thermostats set to 24°C-26°C. Each degree below 24°C increases electricity consumption by 6-8%.", "high", "bi-snow"),
-                    ("Water Heater Operating Schedule", "Switch off electric water heaters once warm. Avoid continuous 24-hour boiling standby.", "high", "bi-fire"),
-                    ("Off-Peak Appliance Scheduling", "Operate washing machines, pumping machines, and iron boxes during off-peak morning hours.", "moderate", "bi-clock-history"),
-                    ("LED Lighting Transition", "Ensure all room fixtures use energy-efficient LED luminaires instead of halogen or incandescent bulbs.", "moderate", "bi-lightbulb-fill"),
-                    ("Natural Cross-Ventilation", "Open windows in the early morning and evening to cool interior rooms naturally.", "low", "bi-wind")
-                ]
-                for title, msg, tier, icon in recs_data:
-                    db.session.add(Recommendation(title=title, message=msg, consumption_level=tier, icon=icon, is_active=True))
-
-            db.session.commit()
-        except Exception as exc:
-            db.session.rollback()
-            app_instance.logger.warning(f"Startup database initialization: {exc}")
-
-
-# Module-level __getattr__ for WSGI servers and cloud deployments (e.g. Render running 'gunicorn app:app')
-def __getattr__(name: str):
-    if name == 'app':
-        global _wsgi_app
-        try:
-            return _wsgi_app
-        except NameError:
-            target_env = os.environ.get('FLASK_ENV', 'production' if os.environ.get('RENDER') else 'default')
-            _wsgi_app = create_app(target_env)
-            _ensure_startup_data(_wsgi_app)
-            return _wsgi_app
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-
-
+            # Ensure default resident exists
+            resident = User.query.filter_by(email='resident@energy.test').first()
+            if not resident:
+                res_user = User(
+                    full_name='Demo Resident',
+                    email='resident@energy.test',
+                    role='resident'
+                )
+                res_user.set_password('ResidentPass123!')
+                db.session.add(res_user)
+                db.session.commit()
+        except Exception as e:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            app.logger.warning(f"Database startup sync: {e}")

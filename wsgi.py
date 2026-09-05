@@ -1,12 +1,12 @@
 import os
-from app import create_app, _ensure_startup_data
+from app import create_app, init_db_and_defaults
 
 # Determine environment
 env = os.environ.get('FLASK_ENV', 'production')
 app = create_app(env)
 
-# Ensure database tables and initial defaults exist safely on startup
-_ensure_startup_data(app)
+# Ensure database tables and essential defaults exist on startup
+init_db_and_defaults(app)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

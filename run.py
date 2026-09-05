@@ -3,18 +3,12 @@ import sys
 import click
 import random
 from datetime import datetime, date, timedelta, timezone
-from app import create_app
+from app import create_app, init_db_and_defaults
 from app.models import db, User, EnergyRecord, Prediction, ANNModel, SystemSetting, Recommendation, ActivityLog
 from app.ml.train_model import train_ann_model
 
 app = create_app(os.environ.get('FLASK_ENV', 'default'))
-
-# Ensure database tables exist automatically on startup
-with app.app_context():
-    try:
-        db.create_all()
-    except Exception as e:
-        app.logger.warning(f"Startup database initialization warning: {e}")
+init_db_and_defaults(app)
 
 
 def init_db_func():
