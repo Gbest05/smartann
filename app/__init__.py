@@ -132,6 +132,20 @@ def create_app(config_name: str = None) -> Flask:
 def init_db_and_defaults(app_instance: Flask):
     """Ensure database tables exist and seed essential defaults."""
     with app_instance.app_context():
+        db_uri = app_instance.config.get('SQLALCHEMY_DATABASE_URI', '')
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse(db_uri)
+            host = parsed.hostname or 'local SQLite'
+            app_instance.logger.info(f"Target database host: {host}")
+            if parsed.hostname and 'dpg-' in parsed.hostname:
+                app_instance.logger.warning(
+                    f"Notice: Host '{parsed.hostname}' is a Render internal host. "
+                    "If using Neon, add NEON_DATABASE_URL in Render Environment settings."
+                )
+        except Exception:
+            pass
+
         try:
             db.create_all()
             # Ensure default settings exist
@@ -164,12 +178,14 @@ def init_db_and_defaults(app_instance: Flask):
                 res_user.set_password('ResidentPass123!')
                 db.session.add(res_user)
                 db.session.commit()
+
+            app_instance.logger.info("Database startup sync completed successfully.")
         except Exception as e:
             try:
                 db.session.rollback()
             except Exception:
                 pass
-            app_instance.logger.warning(f"Database startup sync: {e}")
+            app_instance.logger.warning(f"Database startup sync warning: {e}")
 
 
 # Default application instance for WSGI servers calling `gunicorn app:app` or `gunicorn app`

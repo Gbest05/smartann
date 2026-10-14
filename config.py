@@ -14,12 +14,23 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'smart-energy-secret-key-default-2026-nd')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
-    # Database URI Resolution with Render PostgreSQL fix
-    database_url = os.environ.get('DATABASE_URL')
-    if database_url:
-        if database_url.startswith('postgres://'):
-            database_url = database_url.replace('postgres://', 'postgresql://', 1)
-        SQLALCHEMY_DATABASE_URI = database_url
+    # Database URI Resolution supporting Neon PostgreSQL & Render PostgreSQL
+    raw_db_url = (
+        os.environ.get('NEON_DATABASE_URL')
+        or os.environ.get('POSTGRES_URL')
+        or os.environ.get('POSTGRESQL_URL')
+        or os.environ.get('DATABASE_URL')
+    )
+    if raw_db_url:
+        raw_db_url = raw_db_url.strip().strip("'").strip('"')
+        if raw_db_url.startswith("psql "):
+            raw_db_url = raw_db_url[5:].strip().strip("'").strip('"')
+        if raw_db_url.startswith('postgres://'):
+            raw_db_url = raw_db_url.replace('postgres://', 'postgresql://', 1)
+        if 'neon.tech' in raw_db_url and 'sslmode=' not in raw_db_url:
+            separator = '&' if '?' in raw_db_url else '?'
+            raw_db_url = f"{raw_db_url}{separator}sslmode=require"
+        SQLALCHEMY_DATABASE_URI = raw_db_url
     else:
         # Local development fallback to SQLite in instance directory
         instance_dir = BASE_DIR / 'instance'

@@ -21,11 +21,24 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         email = form.email.data.lower().strip()
-        user = User.query.filter_by(email=email).first()
+        try:
+            user = User.query.filter_by(email=email).first()
+        except Exception as e:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            current_app.logger.error(f"Database error during login query: {e}")
+            flash('Database connection failed. Please ensure the database server is running and reachable.', 'danger')
+            return render_template('auth/login.html', form=form)
 
         if user and user.check_password(form.password.data.strip()):
-            login_user(user, remember=form.remember_me.data)
-            log_activity(user.id, 'LOGIN', f"User {user.email} signed in successfully.")
+            try:
+                login_user(user, remember=form.remember_me.data)
+                log_activity(user.id, 'LOGIN', f"User {user.email} signed in successfully.")
+            except Exception as e:
+                current_app.logger.warning(f"Session or activity logging warning: {e}")
+
             flash(f"Welcome back, {user.full_name}!", 'success')
 
             # Handle next redirection
@@ -53,23 +66,32 @@ def register():
         email = form.email.data.lower().strip()
         role = form.role.data if form.role.data in ['resident', 'admin'] else 'resident'
 
-        user = User(
-            full_name=form.full_name.data.strip(),
-            email=email,
-            role=role
-        )
-        user.set_password(form.password.data)
+        try:
+            user = User(
+                full_name=form.full_name.data.strip(),
+                email=email,
+                role=role
+            )
+            user.set_password(form.password.data)
 
-        db.session.add(user)
-        db.session.commit()
+            db.session.add(user)
+            db.session.commit()
 
-        login_user(user)
-        log_activity(user.id, 'REGISTER', f"New account registered as {role.upper()} for {email}.")
-        flash(f"Registration successful! Welcome to the Smart Energy Management Platform, {user.full_name}.", 'success')
+            login_user(user)
+            log_activity(user.id, 'REGISTER', f"New account registered as {role.upper()} for {email}.")
+            flash(f"Registration successful! Welcome to the Smart Energy Management Platform, {user.full_name}.", 'success')
 
-        if user.is_admin:
-            return redirect(url_for('admin.dashboard'))
-        return redirect(url_for('dashboard.resident_dashboard'))
+            if user.is_admin:
+                return redirect(url_for('admin.dashboard'))
+            return redirect(url_for('dashboard.resident_dashboard'))
+        except Exception as e:
+            try:
+                db.session.rollback()
+            except Exception:
+                pass
+            current_app.logger.error(f"Database error during user registration: {e}")
+            flash('Database connection failed. Unable to complete registration.', 'danger')
+            return render_template('auth/register.html', form=form)
 
     return render_template('auth/register.html', form=form)
 
